@@ -10,8 +10,7 @@ def run(source):
 		print "Video device or file couldn't be opened"
 		exit()
 
-	cv2.namedWindow("Paused")
-
+	#cv2.namedWindow("Paused")
 	while(True):
 		# Capture frame-by-frame
 		ret, frame = cap.read()
@@ -22,33 +21,25 @@ def run(source):
 		#gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
 		# Display the resulting frame
+		key = cv2.waitKey(10) & 0xFF
+		key2 = cv2.waitKey(10) & 0xFF
 
-		if cv2.waitKey(1) & 0xFF == ord('q'):
+		#cv2.namedWindow('test', cv2.WINDOW_NORMAL)
+
+		if key == ord('q'):
 			break
 
-		if cv2.waitKey(10) & 0xFF == ord('p'):
-
+		if key == ord('p'):
 			while True:
+				cv2.imshow('test', frame)
 
-				key2 = cv2.waitKey(1) or 0xff
-				cv2.imshow('Paused', frame)
-
-				if key2 == ord('p'):
+				if cv2.waitKey(10) & 0xFF == ord('r'):
 					break
-			pass
-
-
-
-
-
 
 
 
 		cv2.imshow('frame', frame)
 	# When everything done, release the capture
-
-
-
 	cap.release()
 	cv2.destroyAllWindows()
 
