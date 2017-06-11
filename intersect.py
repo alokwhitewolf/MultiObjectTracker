@@ -21,27 +21,10 @@ def seg_intersect(a1,a2, b1,b2) :
         return False
     else:
         num = dot( dap, dp )
-        print (num / denom.astype(float))*db + b1
-        return True
+        if a1[0]<=((num / denom.astype(float))*db + b1)[0]<=a2[0]:
+            return True
+        else:
+            return False
 
 
 
-
-'''
-p1 = array( [0.0, 0.0] )
-p2 = array( [1.0, 0.0] )
-
-p3 = array( [4.0, -5.0] )
-p4 = array( [4.0, 2.0] )
-
-print seg_intersect( p1,p2, p3,p4)
-
-p1 = array( [2.0, 2.0] )
-p2 = array( [4.0, 3.0] )
-
-p3 = array( [4.0, 4.0] )
-p4 = array( [8.0, 6.0] )
-
-
-print seg_intersect( p1,p2, p3,p4)
-'''
