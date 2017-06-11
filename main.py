@@ -13,19 +13,12 @@ def run(source):
 	#cv2.namedWindow("Paused")
 	while(True):
 		# Capture frame-by-frame
+
 		ret, frame = cap.read()
 		if not ret:
 			print "Unable to capture device"
 
-		# Our operations on the frame come here
-		#gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-		# Display the resulting frame
 		key = cv2.waitKey(10) & 0xFF
-		key2 = cv2.waitKey(10) & 0xFF
-
-		#cv2.namedWindow('test', cv2.WINDOW_NORMAL)
-
 		if key == ord('q'):
 			break
 
@@ -36,8 +29,6 @@ def run(source):
 				if cv2.waitKey(10) & 0xFF == ord('r'):
 					break
 
-
-
 		cv2.imshow('frame', frame)
 	# When everything done, release the capture
 	cap.release()
@@ -45,7 +36,7 @@ def run(source):
 
 
 
-#if __name__=="__main__":
+
 if __name__ == "__main__":
     # Parse command line arguments
 	parser = ap.ArgumentParser()
