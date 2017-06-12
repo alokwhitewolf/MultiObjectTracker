@@ -1,14 +1,26 @@
 import numpy as np
 import cv2
 import argparse as ap
+import dlib
+import get_points
+
+
+
+
 
 source = 0
 
 def run(source):
+	bool_tracking = False
+	points = []
+
+
 	cap = cv2.VideoCapture(source)
 	if not cap.isOpened():
 		print "Video device or file couldn't be opened"
 		exit()
+
+
 
 	#cv2.namedWindow("Paused")
 	while(True):
@@ -18,18 +30,41 @@ def run(source):
 		if not ret:
 			print "Unable to capture device"
 
-		key = cv2.waitKey(10) & 0xFF
+
+		key = cv2.waitKey(100) & 0xFF
 		if key == ord('q'):
 			break
 
 		if key == ord('p'):
 			while True:
-				cv2.imshow('test', frame)
+				points = get_points.run(frame, multi=True)
+				# Create the tracker object
+				if points:
+					tracker = [dlib.correlation_tracker() for _ in xrange(len(points))]
+					# Provide the tracker the initial position of the object
+					[tracker[i].start_track(frame, dlib.rectangle(*rect)) for i, rect in enumerate(points)]
 
-				if cv2.waitKey(10) & 0xFF == ord('r'):
+				if cv2.waitKey(-1) & 0xFF == ord('r'):
 					break
+				if cv2.waitKey(-1) & 0xFF == ord('q'):
+					exit()
 
-		cv2.imshow('frame', frame)
+		if points:
+			for i in xrange(len(tracker)):
+				tracker[i].update(frame)
+				# Get the position of th object, draw a
+				# bounding box around it and display it.
+				rect = tracker[i].get_position()
+				pt1 = (int(rect.left()), int(rect.top()))
+				pt2 = (int(rect.right()), int(rect.bottom()))
+				cv2.rectangle(frame, pt1, pt2, (255, 255, 255), 3)
+				#print "Object {} tracked at [{}, {}] \r".format(i, pt1, pt2),
+
+
+			#cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
+			cv2.imshow("Image", frame)
+		else:
+			cv2.imshow('frame', frame)
 	# When everything done, release the capture
 	cap.release()
 	cv2.destroyAllWindows()
