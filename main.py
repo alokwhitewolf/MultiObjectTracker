@@ -8,6 +8,26 @@ import intersect
 
 source=0
 
+def get_fps(source, Videolength):
+	cap = cv2.VideoCapture("docs/video/traffic2")
+	counter = 0
+	print "Calculating Frame per second "
+
+	while (True):
+		# Capture frame-by-frame
+
+		ret, frame = cap.read()
+		if not ret:
+			break
+
+		counter += 1
+
+	cap.release()
+	cv2.destroyAllWindows()
+	fps = float(counter/Videolength)
+	print "\nFPS is . . " +str(fps)+"\n"
+	return fps
+
 
 def check(array, new_pnt, last_point):
 	for first, second in zip(array, array[1:]):
@@ -18,7 +38,7 @@ def check(array, new_pnt, last_point):
 			break
 
 
-def run(source):
+def run(source, length):
 	bool_tracking = False
 	points = []
 	points_beta = []
@@ -28,6 +48,8 @@ def run(source):
 	coord = []
 	coord_beta = []
 	Empty = np.empty((0,2), np.uint32)
+
+	get_fps(source, length)
 
 	cap = cv2.VideoCapture(source)
 	if not cap.isOpened():
@@ -152,13 +174,18 @@ def run(source):
 								if check(x, coord_beta[-1], coord_beta[-2]):
 									print "**"
 								else:
-									print " -- "
+									pass
 							except:
-								print "--"
+								pass
 
 					# print "Object {} tracked at [{}, {}] \r".format(i, pt1, pt2),
+		fps = cap.get(cv2.CAP_PROP_FPS)
+		cv2.putText(frame, str(fps), (100,100), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+					(0, 0, 255), 1)
+
 		cv2.imshow('frame', frame)
 	# When everything done, release the capture
+
 	cap.release()
 	cv2.destroyAllWindows()
 
@@ -167,12 +194,16 @@ if __name__ == "__main__":
     # Parse command line arguments
 	parser = ap.ArgumentParser()
 	#group = parser.add_mutually_exclusive_group(required=True)
-	parser.add_argument('-v', "--videoFile", help="Path to Video File")
+	parser.add_argument('-v', "--videoFile", help="Path to Video File", type=str)
+	parser.add_argument('-l', "--videoLen", help="Length of the video in seconds",type=float)
 	args = vars(parser.parse_args())
 
 	if args["videoFile"]:
-		source = args["videoFile"]
+		source =(args["videoFile"])
+	if args["videoLen"]:
+		length = args["videoLen"]
 
-	run(source)
+
+	run(source,length)
 
 
