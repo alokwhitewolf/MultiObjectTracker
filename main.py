@@ -11,7 +11,7 @@ source=0
 def get_fps(source, Videolength):
 	cap = cv2.VideoCapture("docs/video/traffic2")
 	counter = 0
-	print "Calculating Frame per second "
+	print "Calculating Frames per second . . . "
 
 	while (True):
 		# Capture frame-by-frame
@@ -25,17 +25,18 @@ def get_fps(source, Videolength):
 	cap.release()
 	cv2.destroyAllWindows()
 	fps = float(counter/Videolength)
-	print "\nFPS is . . " +str(fps)+"\n"
+	print "\nFPS is " +str(fps)+"\n"
 	return fps
 
 
 def check(array, new_pnt, last_point):
+
+	counter = 0
 	for first, second in zip(array, array[1:]):
-		# if line_value(first[0],first[1])*line_value(second[0],second[1]) <= 0:
-		#   print"*"
+		counter += 1
 		if intersect.seg_intersect(first, second, new_pnt, last_point):
-			print "_______"
-			break
+			return len(array) - counter
+
 
 
 def run(source, length):
@@ -49,7 +50,7 @@ def run(source, length):
 	coord_beta = []
 	Empty = np.empty((0,2), np.uint32)
 
-	get_fps(source, length)
+	#fps = get_fps(source, length)
 
 	cap = cv2.VideoCapture(source)
 	if not cap.isOpened():
@@ -63,8 +64,56 @@ def run(source, length):
 		if not ret:
 			print "Unable to capture device"
 
+		#Resize window
+		#frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+		frame = cv2.resize(frame, (480, 320))
 
-		key = cv2.waitKey(100) & 0xFF
+		key = cv2.waitKey(50) & 0xFF
+
+		if key == ord('d'):
+			print " a to delete a pedestrian "
+			print " b to delete a vehicle "
+			print " q to continue with the detection "
+
+			while True:
+				input = raw_input(" \n Press appropriate key: ")
+
+				if input == 'a':
+					while True:
+						input_a = int(raw_input(" Enter id of the pedestrian to delete , -1 to move to other :"))
+						if input_a < 0:
+							break
+						elif input_a < len(points):
+							del points[input_a]
+							del tracker[input_a]
+							del coord[input_a]
+						else:
+							print " Enter a valid id! "
+						pass
+
+
+				elif input == 'b':
+					while True:
+						input_b = int(raw_input(" Enter id of the vehicle to delete , -1 to move to other :"))
+						if input_b < 0:
+							break
+						elif input_b < len(points):
+							del points[input_b]
+							del tracker[input_b]
+							del coord[input_b]
+						else:
+							print " Enter a valid id! "
+						pass
+
+
+
+				elif input == 'q':
+					break
+
+				else:
+					print "\n Choose a correct key !"
+
+
 		if key == ord('q'):
 			break
 
@@ -82,19 +131,19 @@ def run(source, length):
 
 				points = []
 				for i in xrange(len(tracker_beta)):
-					rect = tracker_beta.get_position()
+					rect = tracker_beta[i].get_position()
 					points_beta.append((int(rect.left()),int(rect.top()),int(rect.right()),int(rect.bottom())))
 
 			while True:
 
-				print "\nAdd vehicles\n"
+				print "\nAdd Pedestrians, if any\n"
 				temp1=get_points.run(frame)
 				for x in temp1:
 					points.append(x)
 
 
 				#if cv2.waitKey(1) & 0xFF == ord('b'):
-				print "\nAdd pedestrians\n"
+				print "\nAdd vehicles, if any\n"
 				temp=get_points.run(frame)
 				for x in temp:
 					points_beta.append(x)
@@ -131,15 +180,15 @@ def run(source, length):
 					pt1 = (int(rect.left()), int(rect.top()))
 					pt2 = (int(rect.right()), int(rect.bottom()))
 					cv2.rectangle(frame, pt1, pt2, (255, 0, 0), 2)
-					cv2.putText(frame, str(i) , (int((pt1[0]+pt2[0])/2),int(pt1[1]+2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
+					cv2.putText(frame, "ped"+str(i) , (int((pt1[0]+pt2[0])/2),int(pt1[1]+2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
 
 					#Update coordinate
 					if len(coord)<(i+1):
 						coord.append(np.empty((0,2),np.uint32))
 
 					coord[i] = np.append(coord[i],np.array([[(pt1[0]+pt2[0])/2,pt2[1]]]),axis = 0)
-					if len(coord[i])>10:
-						coord[i] = np.delete(coord[i], (0), axis=0)
+					#if len(coord[i])>10:
+						#coord[i] = np.delete(coord[i], (0), axis=0)
 
 					#print "i = "+str(i)+" and point list = "+str(coord[i])
 					cv2.polylines(frame, [coord[i]], False, (255, 0, 0),2)
@@ -155,33 +204,27 @@ def run(source, length):
 					pt1 = (int(rect.left()), int(rect.top()))
 					pt2 = (int(rect.right()), int(rect.bottom()))
 					cv2.rectangle(frame, pt1, pt2, (0, 0, 255), 2)
-					cv2.putText(frame, str(i), (int((pt1[0] + pt2[0]) / 2), int(pt1[1] - 2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 0, 255), 1)
+					cv2.putText(frame, "veh"+str(i), (int((pt1[0] + pt2[0]) / 2), int(pt1[1] - 2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 0, 255), 1)
 
 					if len(coord_beta) < (i + 1):
 						coord_beta.append(np.empty((0, 2), np.uint32))
 
 					#
 					coord_beta[i] = np.append(coord_beta[i], np.array([[(pt1[0] + pt2[0]) / 2, pt2[1]]]), axis=0)
-					if len(coord_beta[i]) > 5:
-						coord_beta[i] = np.delete(coord_beta[i], (0), axis=0)
+					#if len(coord_beta[i]) > 5:
+						#coord_beta[i] = np.delete(coord_beta[i], (0), axis=0)
 
 					# print "i = "+str(i)+" and point list = "+str(coord[i])
 					cv2.polylines(frame, [coord_beta[i]], False, (0, 0, 255),2)
 
+					#print "len of coord_beta[i] is "+str(len(coord_beta[i]))
 					if len(coord_beta[i])>2:
 						for x in coord:
-							try:
-								if check(x, coord_beta[-1], coord_beta[-2]):
-									print "**"
-								else:
-									pass
-							except:
-								pass
 
-					# print "Object {} tracked at [{}, {}] \r".format(i, pt1, pt2),
-		fps = cap.get(cv2.CAP_PROP_FPS)
-		cv2.putText(frame, str(fps), (100,100), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-					(0, 0, 255), 1)
+							if not check(x, coord_beta[i][-1], coord_beta[i][-2]) is None:
+								print check(x, coord_beta[i][-1], coord_beta[i][-2])
+
+					# print "Object {} tracked at [{}, {}] \r".format(i, pt1, pt2)
 
 		cv2.imshow('frame', frame)
 	# When everything done, release the capture
