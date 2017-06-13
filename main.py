@@ -10,6 +10,8 @@ def run(source):
 	bool_tracking = False
 	points = []
 	points_beta = []
+	#tracker = []
+	#tracker_beta = []
 
 
 	cap = cv2.VideoCapture(source)
@@ -28,13 +30,28 @@ def run(source):
 			print "Unable to capture device"
 
 
-		key = cv2.waitKey(10) & 0xFF
+		key = cv2.waitKey(100) & 0xFF
 		if key == ord('q'):
 			break
 
 		if key == ord('p'):
 			#print "press 'a' to add pedestrians"
 			#print "press 'b' to add vehicles"
+			if points:
+
+				points = []
+				for i in xrange(len(tracker)):
+
+					rect = tracker[i].get_position()
+					points.append((int(rect.left()),int(rect.top()),int(rect.right()),int(rect.bottom())))
+
+			if points_beta:
+
+				points = []
+				for i in xrange(len(tracker_beta)):
+					rect = tracker_beta.get_position()
+					points_beta.append((int(rect.left()),int(rect.top()),int(rect.right()),int(rect.bottom())))
+
 
 
 
@@ -47,6 +64,10 @@ def run(source):
 				temp1=get_points.run(frame, multi=True)
 				for x in temp1:
 					points.append(x)
+				print "------------"
+				print points
+				print "------------"
+
 
 				#if cv2.waitKey(1) & 0xFF == ord('b'):
 				print "Adding pedestrians"
