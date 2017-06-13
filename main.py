@@ -3,6 +3,7 @@ import cv2
 import argparse as ap
 import dlib
 import get_points
+import multiprocessing
 
 source = 0
 
@@ -74,34 +75,39 @@ def run(source):
 				if cv2.waitKey(-1) & 0xFF == ord('q'):
 					exit()
 
-		if points:
-			print "ALPHA"
-			for i in xrange(len(tracker)):
-				tracker[i].update(frame)
-				# Get the position of th object, draw a
-				# bounding box around it and display it.
-				rect = tracker[i].get_position()
-				pt1 = (int(rect.left()), int(rect.top()))
-				pt2 = (int(rect.right()), int(rect.bottom()))
-				cv2.rectangle(frame, pt1, pt2, (255, 255, 255), 1)
-				#print "Object {} tracked at [{}, {}] \r".format(i, pt1, pt2),
+		if points or points_beta:
 
-		if points_beta:
-			print "BETA"
-			for i in xrange(len(tracker_beta)):
-				tracker[i].update(frame)
-				# Get the position of th object, draw a
-				# bounding box around it and display it.
-				rect = tracker_beta[i].get_position()
-				pt1 = (int(rect.left()), int(rect.top()))
-				pt2 = (int(rect.right()), int(rect.bottom()))
-				cv2.rectangle(frame, pt1, pt2, (0, 0, 255), 1)
-			# print "Object {} tracked at [{}, {}] \r".format(i, pt1, pt2),
 
-			#cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
-			cv2.imshow("Image", frame)
-		else:
-			cv2.imshow('frame', frame)
+			if points:
+				for i in xrange(len(tracker)):
+					print "ALPHA"
+					tracker[i].update(frame)
+					# Get the position of th object, draw a
+					# bounding box around it and display it.
+					rect = tracker[i].get_position()
+					pt1 = (int(rect.left()), int(rect.top()))
+					pt2 = (int(rect.right()), int(rect.bottom()))
+					cv2.rectangle(frame, pt1, pt2, (255, 255, 255), 1)
+					#cv2.imshow("Image", frame)
+					#print "Object {} tracked at [{}, {}] \r".format(i, pt1, pt2),
+
+			if points_beta:
+				for i in xrange(len(tracker_beta)):
+					print "BETA"
+					tracker_beta[i].update(frame)
+					# Get the position of th object, draw a
+					# bounding box around it and display it.
+					rect = tracker_beta[i].get_position()
+					pt1 = (int(rect.left()), int(rect.top()))
+					pt2 = (int(rect.right()), int(rect.bottom()))
+					cv2.rectangle(frame, pt1, pt2, (0, 0, 255), 1)
+					#cv2.imshow("Image", frame)
+					# print "Object {} tracked at [{}, {}] \r".format(i, pt1, pt2),
+
+					#cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
+
+
+		cv2.imshow('frame', frame)
 	# When everything done, release the capture
 	cap.release()
 	cv2.destroyAllWindows()
