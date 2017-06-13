@@ -16,9 +16,6 @@ These collection of scripts can also be used to track a group of user specified 
 
 ## Starting the code
 
-Tracking can either be done using a live video from a webcam or using a video file.
-
-### Tracking using Video File
 
 To run the code using a video file use the following command line argument --
 
@@ -33,7 +30,7 @@ python main.py -v docs/video/traffic2
 ```
 
 
-Once the code starts, it will start the video file. To select the objects to be tracked, pause the video by pressing the <kbd>p</kbd> key. It will first ask you to  to create a bounding box around the object(s) to be tracked in the newsly created window. Press the mouse to select the top-left pixel location of the object to be tracked and then release the mouse on the bottom-right location of the object to be tracked. You can select multiple instaces of a type of object.. Also, if you want to discard the object, press the <kbd>d</kbd> key. Press <kbd>s</kbd> key to save the object and initiate the tracker.Each onbject is assigned an index, which will be useful in deleting instances of the trackers.
+Once the code starts, it will play video file. To select the objects to be tracked, pause the video by pressing the <kbd>p</kbd> key. It will first ask you to  to create a bounding box around the object(s) to be tracked in the newsly created window. Press the mouse to select the top-left pixel location of the object to be tracked and then release the mouse on the bottom-right location of the object to be tracked. You can select multiple instaces of a type of object.. Also, if you want to discard the object, press the <kbd>d</kbd> key. Press <kbd>s</kbd> key to save the object and initiate the tracker.Each onbject is assigned an index, which will be useful in deleting instances of the trackers.
 
 ![Image](docs/images/screenshot_2.png)
 
