@@ -49,7 +49,7 @@ Press <kbd>q</kbd> anytime to gracefully quit the code
 ### Calculation of PET values
 
 
-Additional flags -l is needed for calculating PET. The -l is followed by the length of the video to be played in seconds. This is important for finding out PET values, as we need the frame processing rate. The number of frames in the video comes to our aid
+Additional flags -l is needed for calculating PET. The -l is followed by the length of the video to be played in seconds. This is important for finding out PET values, as we need the frame processing rate. The runtime of the video is essential. 
 
 ```shell
 -l 1000
