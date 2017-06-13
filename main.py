@@ -3,7 +3,6 @@ import cv2
 import argparse as ap
 import dlib
 import get_points
-import multiprocessing
 
 source = 0
 
@@ -29,7 +28,7 @@ def run(source):
 			print "Unable to capture device"
 
 
-		key = cv2.waitKey(100) & 0xFF
+		key = cv2.waitKey(10) & 0xFF
 		if key == ord('q'):
 			break
 
@@ -77,23 +76,23 @@ def run(source):
 
 		if points or points_beta:
 
-
 			if points:
 				for i in xrange(len(tracker)):
-					print "ALPHA"
+
 					tracker[i].update(frame)
 					# Get the position of th object, draw a
 					# bounding box around it and display it.
 					rect = tracker[i].get_position()
 					pt1 = (int(rect.left()), int(rect.top()))
 					pt2 = (int(rect.right()), int(rect.bottom()))
-					cv2.rectangle(frame, pt1, pt2, (255, 255, 255), 1)
+					cv2.rectangle(frame, pt1, pt2, (255, 0, 0), 1)
+					cv2.putText(frame, str(i) , (int((pt1[0]+pt2[0])/2),int(pt1[1]+2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
 					#cv2.imshow("Image", frame)
 					#print "Object {} tracked at [{}, {}] \r".format(i, pt1, pt2),
 
 			if points_beta:
 				for i in xrange(len(tracker_beta)):
-					print "BETA"
+
 					tracker_beta[i].update(frame)
 					# Get the position of th object, draw a
 					# bounding box around it and display it.
@@ -101,6 +100,8 @@ def run(source):
 					pt1 = (int(rect.left()), int(rect.top()))
 					pt2 = (int(rect.right()), int(rect.bottom()))
 					cv2.rectangle(frame, pt1, pt2, (0, 0, 255), 1)
+					cv2.putText(frame, str(i), (int((pt1[0] + pt2[0]) / 2), int(pt1[1] - 2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 0, 255), 1)
+
 					#cv2.imshow("Image", frame)
 					# print "Object {} tracked at [{}, {}] \r".format(i, pt1, pt2),
 
