@@ -10,18 +10,17 @@ def run(source):
 	bool_tracking = False
 	points = []
 	points_beta = []
-	#tracker = []
-	#tracker_beta = []
 
+	frame_var = 10
+
+	coord = []
+	Empty = np.empty((0,2), np.uint32)
 
 	cap = cv2.VideoCapture(source)
 	if not cap.isOpened():
 		print "Video device or file couldn't be opened"
 		exit()
 
-
-
-	#cv2.namedWindow("Paused")
 	while(True):
 		# Capture frame-by-frame
 
@@ -35,8 +34,7 @@ def run(source):
 			break
 
 		if key == ord('p'):
-			#print "press 'a' to add pedestrians"
-			#print "press 'b' to add vehicles"
+
 			if points:
 
 				points = []
@@ -52,26 +50,17 @@ def run(source):
 					rect = tracker_beta.get_position()
 					points_beta.append((int(rect.left()),int(rect.top()),int(rect.right()),int(rect.bottom())))
 
-
-
-
-
 			while True:
 
-
-				#if cv2.waitKey(1) & 0xFF == ord('a'):
 				print "Adding vehicles"
-				temp1=get_points.run(frame, multi=True)
+				temp1=get_points.run(frame)
 				for x in temp1:
 					points.append(x)
-				print "------------"
-				print points
-				print "------------"
 
 
 				#if cv2.waitKey(1) & 0xFF == ord('b'):
 				print "Adding pedestrians"
-				temp=get_points.run(frame, multi=True)
+				temp=get_points.run(frame)
 				for x in temp:
 					points_beta.append(x)
 
@@ -108,7 +97,14 @@ def run(source):
 					pt2 = (int(rect.right()), int(rect.bottom()))
 					cv2.rectangle(frame, pt1, pt2, (255, 0, 0), 1)
 					cv2.putText(frame, str(i) , (int((pt1[0]+pt2[0])/2),int(pt1[1]+2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
-					#cv2.imshow("Image", frame)
+
+					#Update coordinate
+					if len(coord)<(i+1):
+						coord.append(np.empty((0,2),np.uint32))
+					 #
+					coord[i] = np.append(coord[i],np.array([[(pt1[0]+pt2[0])/2,pt2[1]]]),axis = 0)
+					#print "i = "+str(i)+" and point list = "+str(coord[i])
+					cv2.polylines(frame, [coord[i]], False, (0, 0, 255))
 					#print "Object {} tracked at [{}, {}] \r".format(i, pt1, pt2),
 
 			if points_beta:
@@ -123,12 +119,8 @@ def run(source):
 					cv2.rectangle(frame, pt1, pt2, (0, 0, 255), 1)
 					cv2.putText(frame, str(i), (int((pt1[0] + pt2[0]) / 2), int(pt1[1] - 2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 0, 255), 1)
 
-					#cv2.imshow("Image", frame)
+
 					# print "Object {} tracked at [{}, {}] \r".format(i, pt1, pt2),
-
-					#cv2.namedWindow("Image", cv2.WINDOW_NORMAL)
-
-
 		cv2.imshow('frame', frame)
 	# When everything done, release the capture
 	cap.release()
