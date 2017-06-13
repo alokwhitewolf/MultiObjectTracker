@@ -1,3 +1,12 @@
+''' Sample script to test detection of path pf two objects
+    This script when run, opens up a black window. Right clicking on it two provide points to draw a line in blue
+    Left click to provide points for a red line.
+
+    Whenever the blue line crosses the red , we get get flagged
+'''
+
+
+
 import cv2
 import numpy as np
 import itertools
@@ -34,12 +43,13 @@ def get_points(event,x,y,flags,param):
 
 #check if the new point crosses a line
 def check(array, new_pnt, last_point):
-
+        counter = 0
         for first, second in zip(array, array[1:]):
         #if line_value(first[0],first[1])*line_value(second[0],second[1]) <= 0:
          #   print"*"
+            counter += 1
             if intersect.seg_intersect(first, second,new_pnt, last_point):
-                print "_______"
+                print "-------"
                 break
 
 

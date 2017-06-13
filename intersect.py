@@ -1,17 +1,22 @@
 from numpy import *
+'''
+Algorithm to check if two line segments intersect
+'''
 
 
 
-def perp( a ) :
-    b = empty_like(a)
-    b[0] = -a[1]
-    b[1] = a[0]
-    return b
 
 # line segment a given by endpoints a1, a2
 # line segment b given by endpoints b1, b2
 # return
 def seg_intersect(a1,a2, b1,b2) :
+
+    def perp(a):
+        b = empty_like(a)
+        b[0] = -a[1]
+        b[1] = a[0]
+        return b
+
     da = a2-a1
     db = b2-b1
     dp = a1-b1

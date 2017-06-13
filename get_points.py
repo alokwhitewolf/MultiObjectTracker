@@ -1,6 +1,7 @@
 # Import the required modules
 import cv2
 import argparse
+import numpy as np
 
 def run(im, multi=False):
     im_disp = im.copy()
@@ -19,27 +20,30 @@ def run(im, multi=False):
     def callback(event, x, y, flags, param):
 
         if event == cv2.EVENT_LBUTTONDOWN:
+
             print "Delete the previously selected object using key `d` to mark a new location."
             pts_1.append((x, y))
             run.mouse_down = True
 
 
         elif event == cv2.EVENT_LBUTTONUP and run.mouse_down == True:
+            print "LBUTTON UP"
             run.mouse_down = False
             pts_2.append((x, y))
-            print "Object selected at [{}, {}]".format(pts_1[-1], pts_2[-1])
+            #print "Object selected at [{}, {}]".format(pts_1[-1], pts_2[-1])
+            print "object selected"
 
         elif event == cv2.EVENT_MOUSEMOVE and run.mouse_down == True:
-
+            im_draw = im.copy()
             cv2.rectangle(im_draw, pts_1[-1], (x, y), (255,255,255), 3)
             cv2.imshow(window_name, im_draw)
 
-    print "Press and release mouse around the object to be tracked. \n You can also select multiple objects."
+    #print "Press and release mouse around the object to be tracked. \n You can also select multiple objects."
     cv2.setMouseCallback(window_name, callback)
 
-    print "Press key `p` to continue with the selected points."
+    print "Press key `s` to continue with the selected points."
     print "Press key `d` to discard the last object selected."
-    print "Press key `q` to quit the program."
+    print "Press key `q` to quit the program.\n"
 
     while True:
         # Draw the rectangular boxes on the image
@@ -50,14 +54,17 @@ def run(im, multi=False):
         # Display the cropped images
         cv2.namedWindow(window_name_2, cv2.WINDOW_NORMAL)
         cv2.imshow(window_name_2, im_disp)
-        key = cv2.waitKey(30)
-        if key == ord('p'):
+
+        key = cv2.waitKey(10) & 0xFF
+        if key == ord('s'):
+            print "pressed s"
             # Press key `s` to return the selected points
-            #cv2.destroyAllWindows()
+            #cv2.destroyWindow(window_name)
+            #cv2.destroyWindow(window_name_2)
             point= [(tl + br) for tl, br in zip(pts_1, pts_2)]
             corrected_point=check_point(point)
             return corrected_point
-        elif key == ord('q'):
+        elif key== ord('q'):
             # Press key `q` to quit the program
             print "Quitting without saving."
             exit()
@@ -70,10 +77,10 @@ def run(im, multi=False):
                 im_disp = im.copy()
             else:
                 print "No object to delete."
-    cv2.destroyAllWindows()
-    point= [(tl + br) for tl, br in zip(pts_1, pts_2)]
-    corrected_point=check_point(point)
-    return corrected_point
+    #cv2.destroyWindow()
+    #point= [(tl + br) for tl, br in zip(pts_1, pts_2)]
+    #corrected_point=check_point(point)
+    #return corrected_point
 
 def check_point(points):
     out=[]
@@ -95,3 +102,5 @@ def check_point(points):
         out.append((minx,miny,maxx,maxy))
 
     return out
+
+

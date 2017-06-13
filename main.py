@@ -4,6 +4,7 @@ import argparse as ap
 import dlib
 import get_points
 import intersect
+import xlwt
 
 
 source=0
@@ -39,7 +40,7 @@ def check(array, new_pnt, last_point):
 
 
 
-def run(source, length):
+def run(source, length=1000):
 	bool_tracking = False
 	points = []
 	points_beta = []
@@ -48,7 +49,10 @@ def run(source, length):
 
 	coord = []
 	coord_beta = []
-	Empty = np.empty((0,2), np.uint32)
+
+	number = -1
+	wb = xlwt.Workbook()
+	ws = wb.add_sheet("My Sheet")
 
 	#fps = get_fps(source, length)
 
@@ -222,7 +226,11 @@ def run(source, length):
 						for x in coord:
 
 							if not check(x, coord_beta[i][-1], coord_beta[i][-2]) is None:
-								print check(x, coord_beta[i][-1], coord_beta[i][-2])
+								print "Path conflict detected"
+								number+=1
+
+								required_value =  check(x, coord_beta[i][-1], coord_beta[i][-2])
+								ws.write(number, 0, str(required_value))
 
 					# print "Object {} tracked at [{}, {}] \r".format(i, pt1, pt2)
 
@@ -231,6 +239,7 @@ def run(source, length):
 
 	cap.release()
 	cv2.destroyAllWindows()
+	wb.save("myworkbook.xls")
 
 
 if __name__ == "__main__":
@@ -239,8 +248,9 @@ if __name__ == "__main__":
 	#group = parser.add_mutually_exclusive_group(required=True)
 	parser.add_argument('-v', "--videoFile", help="Path to Video File", type=str)
 	parser.add_argument('-l', "--videoLen", help="Length of the video in seconds",type=float)
-	args = vars(parser.parse_args())
 
+	args = vars(parser.parse_args())
+	length = 1000
 	if args["videoFile"]:
 		source =(args["videoFile"])
 	if args["videoLen"]:
