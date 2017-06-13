@@ -3,8 +3,20 @@ import cv2
 import argparse as ap
 import dlib
 import get_points
+import intersect
 
-source = 0
+
+source=0
+
+
+def check(array, new_pnt, last_point):
+	for first, second in zip(array, array[1:]):
+		# if line_value(first[0],first[1])*line_value(second[0],second[1]) <= 0:
+		#   print"*"
+		if intersect.seg_intersect(first, second, new_pnt, last_point):
+			print "_______"
+			break
+
 
 def run(source):
 	bool_tracking = False
@@ -53,14 +65,14 @@ def run(source):
 
 			while True:
 
-				print "Add vehicles\n"
+				print "\nAdd vehicles\n"
 				temp1=get_points.run(frame)
 				for x in temp1:
 					points.append(x)
 
 
 				#if cv2.waitKey(1) & 0xFF == ord('b'):
-				print "Add pedestrians\n"
+				print "\nAdd pedestrians\n"
 				temp=get_points.run(frame)
 				for x in temp:
 					points_beta.append(x)
@@ -124,15 +136,26 @@ def run(source):
 					cv2.putText(frame, str(i), (int((pt1[0] + pt2[0]) / 2), int(pt1[1] - 2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 0, 255), 1)
 
 					if len(coord_beta) < (i + 1):
-						coord_beta[i] = np.delete(coord_beta[i], (0), axis=0)
+						coord_beta.append(np.empty((0, 2), np.uint32))
+
 					#
 					coord_beta[i] = np.append(coord_beta[i], np.array([[(pt1[0] + pt2[0]) / 2, pt2[1]]]), axis=0)
-					if len(coord_beta[i]) > 3:
-
-						np.delete(coord_beta[i], 0)
+					if len(coord_beta[i]) > 5:
+						coord_beta[i] = np.delete(coord_beta[i], (0), axis=0)
 
 					# print "i = "+str(i)+" and point list = "+str(coord[i])
 					cv2.polylines(frame, [coord_beta[i]], False, (0, 0, 255),2)
+
+					if len(coord_beta[i])>2:
+						for x in coord:
+							try:
+								if check(x, coord_beta[-1], coord_beta[-2]):
+									print "**"
+								else:
+									print " -- "
+							except:
+								print "--"
+
 					# print "Object {} tracked at [{}, {}] \r".format(i, pt1, pt2),
 		cv2.imshow('frame', frame)
 	# When everything done, release the capture
