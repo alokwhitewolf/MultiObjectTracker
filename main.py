@@ -14,13 +14,14 @@ def run(source):
 	frame_var = 10
 
 	coord = []
+	coord_beta = []
 	Empty = np.empty((0,2), np.uint32)
 
 	cap = cv2.VideoCapture(source)
 	if not cap.isOpened():
 		print "Video device or file couldn't be opened"
 		exit()
-
+	print " press 'p' to pause video and add objects to track \n press 'd' while the video plays to delete an object \n press 'q' to quit \n "
 	while(True):
 		# Capture frame-by-frame
 
@@ -52,14 +53,14 @@ def run(source):
 
 			while True:
 
-				print "Adding vehicles"
+				print "Add vehicles\n"
 				temp1=get_points.run(frame)
 				for x in temp1:
 					points.append(x)
 
 
 				#if cv2.waitKey(1) & 0xFF == ord('b'):
-				print "Adding pedestrians"
+				print "Add pedestrians\n"
 				temp=get_points.run(frame)
 				for x in temp:
 					points_beta.append(x)
@@ -95,16 +96,19 @@ def run(source):
 					rect = tracker[i].get_position()
 					pt1 = (int(rect.left()), int(rect.top()))
 					pt2 = (int(rect.right()), int(rect.bottom()))
-					cv2.rectangle(frame, pt1, pt2, (255, 0, 0), 1)
+					cv2.rectangle(frame, pt1, pt2, (255, 0, 0), 2)
 					cv2.putText(frame, str(i) , (int((pt1[0]+pt2[0])/2),int(pt1[1]+2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
 
 					#Update coordinate
 					if len(coord)<(i+1):
 						coord.append(np.empty((0,2),np.uint32))
-					 #
+
 					coord[i] = np.append(coord[i],np.array([[(pt1[0]+pt2[0])/2,pt2[1]]]),axis = 0)
+					if len(coord[i])>10:
+						coord[i] = np.delete(coord[i], (0), axis=0)
+
 					#print "i = "+str(i)+" and point list = "+str(coord[i])
-					cv2.polylines(frame, [coord[i]], False, (0, 0, 255))
+					cv2.polylines(frame, [coord[i]], False, (255, 0, 0),2)
 					#print "Object {} tracked at [{}, {}] \r".format(i, pt1, pt2),
 
 			if points_beta:
@@ -116,10 +120,19 @@ def run(source):
 					rect = tracker_beta[i].get_position()
 					pt1 = (int(rect.left()), int(rect.top()))
 					pt2 = (int(rect.right()), int(rect.bottom()))
-					cv2.rectangle(frame, pt1, pt2, (0, 0, 255), 1)
+					cv2.rectangle(frame, pt1, pt2, (0, 0, 255), 2)
 					cv2.putText(frame, str(i), (int((pt1[0] + pt2[0]) / 2), int(pt1[1] - 2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 0, 255), 1)
 
+					if len(coord_beta) < (i + 1):
+						coord_beta[i] = np.delete(coord_beta[i], (0), axis=0)
+					#
+					coord_beta[i] = np.append(coord_beta[i], np.array([[(pt1[0] + pt2[0]) / 2, pt2[1]]]), axis=0)
+					if len(coord_beta[i]) > 3:
 
+						np.delete(coord_beta[i], 0)
+
+					# print "i = "+str(i)+" and point list = "+str(coord[i])
+					cv2.polylines(frame, [coord_beta[i]], False, (0, 0, 255),2)
 					# print "Object {} tracked at [{}, {}] \r".format(i, pt1, pt2),
 		cv2.imshow('frame', frame)
 	# When everything done, release the capture
