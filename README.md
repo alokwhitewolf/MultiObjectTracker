@@ -30,7 +30,7 @@ python main.py -v docs/video/traffic2
 ```
 
 
-Once the code starts, it will play video file. To select the objects to be tracked, pause the video by pressing the <kbd>p</kbd> key. It will first ask you to  to create a bounding box around the object(s) to be tracked in the newsly created window. Press the mouse to select the top-left pixel location of the object to be tracked and then release the mouse on the bottom-right location of the object to be tracked. You can select multiple instaces of a type of object.. Also, if you want to discard the object, press the <kbd>d</kbd> key. Press <kbd>s</kbd> key to save the object and initiate the tracker.Each onbject is assigned an index, which will be useful in deleting instances of the trackers.
+Once the code starts, it will play video file. To select the objects to be tracked, pause the video by pressing the <kbd>p</kbd> key. It will first ask you to  to create a bounding box around the object(s) to be tracked in the newsly created window. Press the mouse to select the top-left pixel location of the object to be tracked and then release the mouse on the bottom-right location of the object to be tracked. You can select multiple instaces of a type of object.. Also, if you want to discard the object, press the <kbd>d</kbd> key. Press <kbd>s</kbd> key to save the category of objects and initiate the tracker.Each object is assigned an index, which will be useful in deleting instances of the trackers.
 
 ![Image](docs/images/screenshot_2.png)
 
@@ -39,7 +39,7 @@ After initiating objects of both categories, press <kbd>r</kbd> key to resume th
 
 Whenever the video is playing, you can press <kbd>d</kbd> key to delete instances of the object. Further instruction will appear on the terminal window
 
-You can always pause and resume the tracking. It doesn't lead to any lo
+You can always pause and resume the tracking. It doesn't lead to any loss of tracker objects.
 
 Press <kbd>q</kbd> anytime to gracefully quit the code
 
