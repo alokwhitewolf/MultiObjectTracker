@@ -1,6 +1,7 @@
 from numpy import *
 '''
 Algorithm to check if two line segments intersect
+
 '''
 
 

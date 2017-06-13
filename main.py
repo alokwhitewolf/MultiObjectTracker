@@ -9,6 +9,11 @@ import xlwt
 
 source=0
 
+#Function to calculate the frames per second of the video.
+# We do it manually by calculating Total_no_of_frames/Total_run_time
+#Run_time of the video is a prerequisite
+#Fps calculation is note needed when mode = False in run()
+
 def get_fps(source, Videolength):
 	cap = cv2.VideoCapture("docs/video/traffic2")
 	frame_counter = 0
@@ -29,7 +34,8 @@ def get_fps(source, Videolength):
 	print "\nFPS is " +str(fps)+"\n"
 	return fps
 
-
+#Algorithm to check intersection of line segments
+#It checks iteratively intersection between a pair of points(Last location of the vehicle) and pairs of points of another List(Pedestrian path)
 def check_intersection(array, new_pnt, last_point):
 
 	counter = 0
@@ -39,19 +45,27 @@ def check_intersection(array, new_pnt, last_point):
 			return len(array) - counter
 
 
+#When mode = True, the Post Encroachment Time is stored in excel sheet.
+#When mode is false, only conflict times are detected and no data is stored.
+#when mode is false, length parameter is irrelevant
 
 def run(source, mode=False, length=500):
 	print length
-	bool_tracking = False
+
+	#list of touples containing coordinates of the rectangle
+	#bounding the object of interest
+
 	points_ped = []
 	points_veh = []
 
-	frame_var = 10
+	# Variable so that the trajectories are  dynamically increased and decreased. Trajectory length is constant
+	# frame_var = 10
 
 	coord_ped = []
 	coord_veh = []
 
 	if mode:
+
 		noOfConflicts = -1
 		wb = xlwt.Workbook()
 		ws = wb.add_sheet("My Sheet")
@@ -70,11 +84,11 @@ def run(source, mode=False, length=500):
 			print "Unable to capture device"
 
 		#Resize window
-		#frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 		frame = cv2.resize(frame, (480, 320))
 
 		key = cv2.waitKey(50) & 0xFF
 
+		#To delete already selected objects
 		if key == ord('d'):
 			print " a to delete a pedestrian "
 			print " b to delete a vehicle "
@@ -122,8 +136,10 @@ def run(source, mode=False, length=500):
 		if key == ord('q'):
 			break
 
+		#Pause to add objects to track
 		if key == ord('p'):
 
+			#Update the list of coordinates
 			if points_ped:
 
 				points_ped = []
@@ -141,13 +157,14 @@ def run(source, mode=False, length=500):
 
 			while True:
 
+				#Add Pedestrians to track
 				print "\nAdd Pedestrians, if any\n"
 				temp_ped=get_points.run(frame)
 				for x in temp_ped:
 					points_ped.append(x)
 
 
-				#if cv2.waitKey(1) & 0xFF == ord('b'):
+				#Add vehicles to track
 				print "\nAdd vehicles, if any\n"
 				temp_veh=get_points.run(frame)
 				for x in temp_veh:
@@ -155,11 +172,13 @@ def run(source, mode=False, length=500):
 
 
 				if points_ped:
+					#initiate tracker
 					tracker_ped = [dlib.correlation_tracker() for _ in xrange(len(points_ped))]
 					# Provide the tracker the initial position of the object
 					[tracker_ped[i].start_track(frame, dlib.rectangle(*rect)) for i, rect in enumerate(points_ped)]
 
 				if points_veh:
+					#initiate tracker
 					tracker_veh = [dlib.correlation_tracker() for _ in xrange(len(points_veh))]
 					# Provide the tracker the initial position of the object
 					[tracker_veh[i].start_track(frame, dlib.rectangle(*rect)) for i, rect in enumerate(points_veh)]
@@ -187,17 +206,19 @@ def run(source, mode=False, length=500):
 					cv2.rectangle(frame, pt1, pt2, (255, 0, 0), 2)
 					cv2.putText(frame, "ped"+str(i) , (int((pt1[0]+pt2[0])/2),int(pt1[1]+2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
 
-					#Update coordinate
+					# Add trajectory of new objects
 					if len(coord_ped)<(i+1):
 						coord_ped.append(np.empty((0,2),np.uint32))
 
+					#update trajectory
 					coord_ped[i] = np.append(coord_ped[i],np.array([[(pt1[0]+pt2[0])/2,pt2[1]]]),axis = 0)
-					#if len(coord[i])>10:
+					#Keep the length of trajectory constant
+					#if len(coord[i])>frame_var:
 						#coord[i] = np.delete(coord[i], (0), axis=0)
 
-					#print "i = "+str(i)+" and point list = "+str(coord[i])
+					#draw trajectory
 					cv2.polylines(frame, [coord_ped[i]], False, (255, 0, 0),2)
-					#print "Object {} tracked at [{}, {}] \r".format(i, pt1, pt2),
+
 
 			if points_veh:
 				for i in xrange(len(tracker_veh)):
@@ -211,36 +232,39 @@ def run(source, mode=False, length=500):
 					cv2.rectangle(frame, pt1, pt2, (0, 0, 255), 2)
 					cv2.putText(frame, "veh"+str(i), (int((pt1[0] + pt2[0]) / 2), int(pt1[1] - 2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 0, 255), 1)
 
+					# Add trajectory of new objects
 					if len(coord_veh) < (i + 1):
 						coord_veh.append(np.empty((0, 2), np.uint32))
 
-					#
+					##update trajectory
 					coord_veh[i] = np.append(coord_veh[i], np.array([[(pt1[0] + pt2[0]) / 2, pt2[1]]]), axis=0)
-					#if len(coord_beta[i]) > 5:
+					#if len(coord_beta[i]) > frame_var:
 						#coord_beta[i] = np.delete(coord_beta[i], (0), axis=0)
 
-					# print "i = "+str(i)+" and point list = "+str(coord[i])
+					# draw trajectory
 					cv2.polylines(frame, [coord_veh[i]], False, (0, 0, 255),2)
 
-					#print "len of coord_beta[i] is "+str(len(coord_beta[i]))
+
+					##Check for conflict
 					if len(coord_veh[i])>2:
 						for x in coord_ped:
 
 							if not check_intersection(x, coord_veh[i][-1], coord_veh[i][-2]) is None:
 								print "Path conflict detected"
-								noOfConflicts += 1
+								if mode:
+									noOfConflicts += 1
 
-								required_value =  check_intersection(x, coord_veh[i][-1], coord_veh[i][-2])
-								ws.write(noOfConflicts, 0, str(required_value*fps))
-
-					# print "Object {} tracked at [{}, {}] \r".format(i, pt1, pt2)
+									required_value =  check_intersection(x, coord_veh[i][-1], coord_veh[i][-2])
+									ws.write(noOfConflicts, 0, str(required_value*fps))
 
 		cv2.imshow('frame', frame)
 	# When everything done, release the capture
 
 	cap.release()
 	cv2.destroyAllWindows()
-	wb.save("myworkbook.xls")
+
+	if mode:
+		wb.save("myworkbook.xls")
 
 
 if __name__ == "__main__":
@@ -255,10 +279,13 @@ if __name__ == "__main__":
 	if args["videoFile"]:
 		source =(args["videoFile"])
 
-	if args["videoLen"] and args["WriteMode"]==True:
+	if args["videoLen"]:
 		length = args["videoLen"]
 
-		run(source, length)
+		run(source, True, length)
+
+	else:
+		run(source)
 
 
 
