@@ -1,103 +1,87 @@
-''' Sample script to find the velocity of a moving object between two lines if frame rate is known
+''' Sample script to test the logic of finding the velocity of a moving object between two lines if frame rate is known
     This script when run, opens up a black window.Two lines are visible, one green other blue
 
     left clicking on the screen gives points for a polyline of red color. This script checks for how many frames/clicks
     the red polyline spent between intersecting our two lines
 '''
 
-
-
 import cv2
 import numpy as np
-import itertools
 import intersect
+import get_line
 
-left_click = np.empty((0,2), np.uint32)
-#left_click_bool = 0
-#right_click = np.empty((0,2), np.uint32)
+left_click = np.empty((0, 2), np.int32)
 
-lpnts = np.empty((0,2), np.uint32)
-#rpnts = np.empty((0,2), np.uint32)
-
-
-l1 = np.array([(0,200), (400,200)], np.uint32)
-#print l1[0]
-l2 = np.array([(0,400),(400,400)],np.uint32)
-
-lines = [l1,l2]
+lpnts = np.empty((0, 2), np.int32)
 
 which_intersect = 0
 mode = 0
 counter = 0
 
+img = np.zeros((512, 512, 3), np.uint8)
 
 
-# mouse callback function
-def get_points(event,x,y,flags,param):
-    global lpnts,rpnts,mode,counter,which_intersect
+def get_points(event, x, y, flags, param):
+    global lpnts, mode, counter, which_intersect
 
     if event == cv2.EVENT_LBUTTONDOWN:
         lpnts = np.append(lpnts, np.array([[x, y]]), axis=0)
         cv2.polylines(img, [lpnts], False, (0, 0, 255))
         if lpnts.size > 2:
             if mode == 0:
+
+                check(l1, lpnts[-1], lpnts[-2])
                 if check(l1, lpnts[-1], lpnts[-2]):
                     which_intersect = 0
                     mode = 1
-
+                check(l2, lpnts[-1], lpnts[-2])
                 if check(l2, lpnts[-1], lpnts[-2]):
                     which_intersect = 1
                     mode = 1
 
             elif mode == 1:
-                counter +=1
-                if check(lines[(which_intersect+1)%2], lpnts[-1], lpnts[-2]):
+                print "mode = 1"
+                counter += 1
+                if check(lines[(which_intersect + 1) % 2], lpnts[-1], lpnts[-2]):
                     mode = 3
                     print counter
 
 
-
-
-
-
-
-'''
-    if event == cv2.EVENT_RBUTTONDOWN:
-        rpnts = np.append(rpnts, np.array([[x, y]]), axis=0)
-        cv2.polylines(img, [rpnts], False, (255, 0, 0))
-
-        if rpnts.size>2:
-            check(lpnts, rpnts[-1], rpnts[-2])
-
-'''
-
-#check if the new point crosses a line
+# check if the new point crosses a line
 def check(array, new_pnt, last_point):
+    for first, second in zip(array, array[1:]):
 
-        for first, second in zip(array, array[1:]):
-
-
-            if intersect.seg_intersect(first, second,new_pnt, last_point):
-                return True
+        if intersect.seg_intersect(first, second, new_pnt, last_point):
+            return True
 
 
+points = get_line.run(img)
 
-img = np.zeros((512,512,3), np.uint8)
-#cv2.line(img,l1[0],l1[1],(255,0,0),5)
-cv2.polylines(img,  np.int32([l1]), False, (255, 0, 0))
-cv2.polylines(img,  np.int32([l2]), False, (0, 255, 0))
+l1 = np.empty((2, 2), np.int32)
+l1[0] = (points[0][0][0], points[0][0][1])
+l1[1] = (points[0][1][0], points[0][1][1])
+print type(points[0][0][0])
 
+l2 = np.empty((2, 2), np.int32)
+l2[0] = (points[1][0][0], points[1][0][1])
+l2[1] = (points[1][1][0], points[1][1][1])
+
+# print l2
+lines = [l1, l2]
+# print lines
+cv2.destroyWindow("Draw line here.")
 
 cv2.namedWindow('image')
-cv2.setMouseCallback('image',get_points)
+cv2.setMouseCallback('image', get_points)
 
-global_bool = True
+cv2.polylines(img, np.int32([l1]), False, (255, 0, 0))
+cv2.polylines(img, np.int32([l2]), False, (0, 255, 0))
 
-while(1):
-
-    cv2.imshow('image',img)
+while (1):
+    cv2.imshow('image', img)
     k = cv2.waitKey(1) & 0xFF
 
     if k == 27:
         break
+cv2.destroyAllWindows()
 
