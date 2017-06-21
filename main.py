@@ -3,8 +3,10 @@ import cv2
 import argparse as ap
 import dlib
 import get_points
+import get_line
 import intersect
 import xlwt
+
 
 
 source=0
@@ -38,11 +40,11 @@ def get_fps(source, Videolength):
 #It checks iteratively intersection between a pair of points(Last location of the vehicle) and pairs of points of another List(Pedestrian path)
 def check_intersection(array, new_pnt, last_point):
 
-	counter = 0
+	intersect_counter = 0
 	for first, second in zip(array, array[1:]):
-		counter += 1
+		intersect_counter += 1
 		if intersect.seg_intersect(first, second, new_pnt, last_point):
-			return len(array) - counter
+			return len(array) - intersect_counter
 
 
 #When mode = True, the Post Encroachment Time is stored in excel sheet.
@@ -50,7 +52,9 @@ def check_intersection(array, new_pnt, last_point):
 #when mode is false, length parameter is irrelevant
 
 def run(source, mode=False, length=500):
-	print length
+
+	if mode:
+		print "runtime of the video in seconds is - "+str(length)+" seconds"
 
 	#list of touples containing coordinates of the rectangle
 	#bounding the object of interest
@@ -59,10 +63,19 @@ def run(source, mode=False, length=500):
 	points_veh = []
 
 	# Variable so that the trajectories are  dynamically increased and decreased. Trajectory length is constant
-	# frame_var = 10
+	#frame_var_ped = 70
+	#frame_var_veh = 10
 
+	#Store trajectory coordinates
 	coord_ped = []
 	coord_veh = []
+
+
+	#If first frame or not
+	first_frame = True
+
+	#Store the distance between reference lines
+	distance = 0
 
 	if mode:
 
@@ -71,11 +84,21 @@ def run(source, mode=False, length=500):
 		ws = wb.add_sheet("My Sheet")
 		fps = get_fps(source, length)
 
+		# Keep a track of assigned objects and their collision
+		collision_objects = []
+		#list to keep velocities of the vehicles
+		velocity = []
+		#bool to keep a counter of frames
+		vehicle_vel_bool = []
+		#counter
+		vehicle_veh_counter = []
+		which_frames = []
+
 	cap = cv2.VideoCapture(source)
 	if not cap.isOpened():
 		print "Video device or file couldn't be opened"
 		exit()
-	print " press 'p' to pause video and add objects to track \n press 'd' while the video plays to delete an object \n press 'q' to quit \n "
+
 	while(True):
 		# Capture frame-by-frame
 
@@ -84,9 +107,37 @@ def run(source, mode=False, length=500):
 			print "Unable to capture device"
 
 		#Resize window
-		frame = cv2.resize(frame, (480, 320))
+		frame = cv2.resize(frame, (500, 350))
 
-		key = cv2.waitKey(50) & 0xFF
+		#############################
+		#If first frame, add two reference lines
+		#Whose real tine distance is known
+		###########################
+		if first_frame:
+			cv2.imshow('frame', frame)
+			points = get_line.run(frame)
+
+			l1 = np.empty((2, 2), np.int32)
+			l1[0] = (points[0][0][0], points[0][0][1])
+			l1[1] = (points[0][1][0], points[0][1][1])
+
+			l2 = np.empty((2, 2), np.int32)
+			l2[0] = (points[1][0][0], points[1][0][1])
+			l2[1] = (points[1][1][0], points[1][1][1])
+
+			lines = [l1, l2]
+
+			cv2.destroyWindow("Draw line here.")
+			first_frame = False
+
+		print " press 'p' to pause video and add objects to track \n "
+		print " press 'd' while the video plays to delete an object \n "
+		print " press 'q' to quit \n "
+
+		if points_ped or points_veh:
+			key = cv2.waitKey(1) & 0xFF
+		else:
+			key = cv2.waitKey(30) & 0xFF
 
 		#To delete already selected objects
 		if key == ord('d'):
@@ -98,9 +149,11 @@ def run(source, mode=False, length=500):
 				input = raw_input(" \n Press appropriate key: ")
 
 				if input == 'a':
+					input_a = -2
+
 					while True:
 						input_a = int(raw_input(" Enter id of the pedestrian to delete , -1 to move to other :"))
-						if input_a < 0:
+						if input_a == -1:
 							break
 						elif input_a < len(points_ped):
 							del points_ped[input_a]
@@ -117,6 +170,9 @@ def run(source, mode=False, length=500):
 						if input_b < 0:
 							break
 						elif input_b < len(points_veh):
+							#if mode:
+								#Condition for deleting and
+
 							del points_veh[input_b]
 							del tracker_veh[input_b]
 							del coord_veh[input_b]
@@ -155,6 +211,7 @@ def run(source, mode=False, length=500):
 					rect = tracker_veh[i].get_position()
 					points_veh.append((int(rect.left()),int(rect.top()),int(rect.right()),int(rect.bottom())))
 
+
 			while True:
 
 				#Add Pedestrians to track
@@ -163,12 +220,16 @@ def run(source, mode=False, length=500):
 				for x in temp_ped:
 					points_ped.append(x)
 
-
 				#Add vehicles to track
 				print "\nAdd vehicles, if any\n"
 				temp_veh=get_points.run(frame)
+
+				'''Can be made more efficient '''
 				for x in temp_veh:
 					points_veh.append(x)
+					#if mode:
+
+
 
 
 				if points_ped:
@@ -188,6 +249,8 @@ def run(source, mode=False, length=500):
 
 
 				if cv2.waitKey(-1) & 0xFF == ord('r'):
+					cv2.destroyWindow("Select objects to be tracked here.")
+					cv2.destroyWindow("Objects to be tracked.")
 					break
 				if cv2.waitKey(-1) & 0xFF == ord('q'):
 					exit()
@@ -213,8 +276,8 @@ def run(source, mode=False, length=500):
 					#update trajectory
 					coord_ped[i] = np.append(coord_ped[i],np.array([[(pt1[0]+pt2[0])/2,pt2[1]]]),axis = 0)
 					#Keep the length of trajectory constant
-					#if len(coord[i])>frame_var:
-						#coord[i] = np.delete(coord[i], (0), axis=0)
+					#if len(coord_ped[i])>frame_var:
+					#	coord_ped[i] = np.delete(coord_ped[i], (0), axis=0)
 
 					#draw trajectory
 					cv2.polylines(frame, [coord_ped[i]], False, (255, 0, 0),2)
@@ -238,11 +301,14 @@ def run(source, mode=False, length=500):
 
 					##update trajectory
 					coord_veh[i] = np.append(coord_veh[i], np.array([[(pt1[0] + pt2[0]) / 2, pt2[1]]]), axis=0)
-					#if len(coord_beta[i]) > frame_var:
-						#coord_beta[i] = np.delete(coord_beta[i], (0), axis=0)
+					#if len(coord_veh[i]) > frame_var:
+					#	coord_veh[i] = np.delete(coord_veh[i], (0), axis=0)
 
 					# draw trajectory
 					cv2.polylines(frame, [coord_veh[i]], False, (0, 0, 255),2)
+
+					##Condition for finding velocity
+					#if mode:
 
 
 					##Check for conflict
@@ -252,16 +318,19 @@ def run(source, mode=False, length=500):
 							if not check_intersection(x, coord_veh[i][-1], coord_veh[i][-2]) is None:
 								print "Path conflict detected"
 								if mode:
+									#Also keep a track record
 									noOfConflicts += 1
 
 									required_value =  check_intersection(x, coord_veh[i][-1], coord_veh[i][-2])
 									ws.write(noOfConflicts, 0, str(required_value*fps))
 
+		cv2.polylines(frame, np.int32([l1]), False, (255, 0, 0))
+		cv2.polylines(frame, np.int32([l2]), False, (0, 255, 0))
 		cv2.imshow('frame', frame)
 	# When everything done, release the capture
 
 	cap.release()
-	cv2.destroyAllWindows()
+
 
 	if mode:
 		wb.save("myworkbook.xls")
@@ -286,9 +355,3 @@ if __name__ == "__main__":
 
 	else:
 		run(source)
-
-
-
-
-
-
