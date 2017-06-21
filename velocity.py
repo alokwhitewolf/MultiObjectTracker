@@ -21,6 +21,7 @@ counter = 0
 img = np.zeros((512, 512, 3), np.uint8)
 
 
+
 def get_points(event, x, y, flags, param):
     global lpnts, mode, counter, which_intersect
 
@@ -78,9 +79,12 @@ cv2.polylines(img, np.int32([l2]), False, (0, 255, 0))
 
 while (1):
     cv2.imshow('image', img)
-    k = cv2.waitKey(1) & 0xFF
+    k = cv2.waitKey(2000) & 0xFF
+
 
     if k == 27:
         break
+    cv2.moveWindow('image', 1000, 0)
+
 cv2.destroyAllWindows()
 

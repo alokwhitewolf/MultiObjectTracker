@@ -64,8 +64,8 @@ def run(source, mode=False, length=500):
 	points_veh = []
 
 	# Variable so that the trajectories are  dynamically increased and decreased. Trajectory length is constant
-	frame_var_ped = 100
-	frame_var_veh = 100
+	frame_var_ped = 1000
+	frame_var_veh = 1000
 
 	#Store trajectory coordinates
 	coord_ped = []
@@ -93,9 +93,13 @@ def run(source, mode=False, length=500):
 		ws = wb.add_sheet("My Sheet")
 		fps = get_fps(source, length)
 
+		frame_var_ped = 20 * fps
+		frame_var_veh = 10 * fps
+
 		ws.write(0, 0, "PET")
 		ws.write(0, 1, "Sex")
 		ws.write(0,2,"Speed")
+		ws.write(0,3,"Time")
 		### <-- Lists to be stored with respect to vehicle --> ###
 
 
@@ -124,6 +128,9 @@ def run(source, mode=False, length=500):
 		print "Video device or file couldn't be opened"
 		exit()
 
+	#variable to track how many frames has been processed
+	time_counter = 0
+
 	while(True):
 		# Capture frame-by-frame
 
@@ -132,11 +139,13 @@ def run(source, mode=False, length=500):
 			print "Unable to capture device"
 
 		#Resize window
-		frame = cv2.resize(frame, (500, 350))
+		frame = cv2.resize(frame, (450, 350))
 		height, width = frame.shape[:2]
 
 		#Make frame size fixed
 		cv2.namedWindow('frame', cv2.WINDOW_AUTOSIZE)
+		cv2.moveWindow('frame', 916, 418)
+
 
 		#############################
 		#If first frame, add two reference lines
@@ -148,6 +157,8 @@ def run(source, mode=False, length=500):
 				cv2.imshow('frame', frame)
 				points = get_line.run(frame)
 
+
+
 				l1 = np.empty((2, 2), np.int32)
 				l1[0] = (points[0][0][0], points[0][0][1])
 				l1[1] = (points[0][1][0], points[0][1][1])
@@ -158,8 +169,8 @@ def run(source, mode=False, length=500):
 
 				lines = [l1, l2]
 
-				print " press 'p' to pause video and add objects to track \n "
-				print " press 'd' while the video plays to delete an object \n "
+				print " press 'p' while the video plays to pause\n        and add objects to track  "
+				print " press 'd' while the video plays to delete\n        an object  "
 				print " press 'q' to quit \n "
 
 				cv2.destroyWindow("Draw line here.")
@@ -171,6 +182,7 @@ def run(source, mode=False, length=500):
 		if to_b_deleted_ped:
 			for x in to_b_deleted_ped:
 				if mode:
+					#try:
 					del pedestrian_sex[x]
 				del points_ped[x]
 				del tracker_ped[x]
@@ -214,19 +226,23 @@ def run(source, mode=False, length=500):
 
 		#To delete already selected objects
 		if key == ord('d'):
-			print " a to delete a pedestrian "
-			print " b to delete a vehicle "
-			print " q to continue with the detection "
+			print "\n press 'a' to delete a pedestrian "
+			print " press 'b' to delete a vehicle "
+			print " press 'r' to resume with tracking \n"
 
 			while True:
-				input = raw_input(" \n Press appropriate key: ")
+				#input = raw_input(" \n Press appropriate key: ")
+				k = cv2.waitKey(10) & 0xFF
 
-				if input == 'a':
+				if k == ord('a'):
 					input_a = -2
 
 					while True:
-						input_a = int(raw_input(" Enter id(on the terminal)  of the pedestrian to delete , -1 to move to other :"))
+						input_a = int(raw_input(" Enter id(on the terminal)  of the pedestrian to delete , -1 to move to other options :"))
 						if input_a == -1:
+							print "\n press 'a' to delete a pedestrian "
+							print " press 'b' to delete a vehicle "
+							print " press 'r' to resume with tracking "
 							break
 						elif input_a < len(points_ped):
 							if mode:
@@ -234,15 +250,19 @@ def run(source, mode=False, length=500):
 							del points_ped[input_a]
 							del tracker_ped[input_a]
 							del coord_ped[input_a]
+							print" Object deleted successfully"
 						else:
 							print " Enter a valid id! "
 						pass
 
 
-				elif input == 'b':
+				elif k == ord('b'):
 					while True:
 						input_b = int(raw_input(" Enter id(on the terminal)  of the vehicle to delete , -1 to move to other :"))
 						if input_b < 0:
+							print "\n press 'a' to delete a pedestrian "
+							print " press 'b' to delete a vehicle "
+							print " press 'r' to resume with tracking "
 							break
 						elif input_b < len(points_veh):
 							if mode:
@@ -260,17 +280,17 @@ def run(source, mode=False, length=500):
 							del points_veh[input_b]
 							del tracker_veh[input_b]
 							del coord_veh[input_b]
+							print" Object deleted successfully"
 						else:
 							print " Enter a valid id! "
 						pass
 
 
 
-				elif input == 'q':
+				elif k == ord('r'):
 					break
 
-				else:
-					print "\n Choose a correct key !"
+
 
 
 		if key == ord('q'):
@@ -299,14 +319,14 @@ def run(source, mode=False, length=500):
 			while True:
 
 				#Add Pedestrians to track
-				print "\nAdd Pedestrians, if any\n"
+				print "\nAdd Pedestrians . . \nDrag rectangles across the frame to assign objects\n"
 				if mode:
 					temp_ped, temp_sex = get_points.run(frame,mode,for_pedestrian=True)
 					for x in temp_ped:
 						points_ped.append(x)
 					for y in temp_sex:
 						pedestrian_sex.append(y)
-					print pedestrian_sex
+
 
 
 				else:
@@ -437,7 +457,7 @@ def run(source, mode=False, length=500):
 							elif vehicle_vel_bool[i] == 1:
 
 								vehicle_frame_counter[i] += 1
-								print vehicle_frame_counter[i]
+
 								if not check_intersection(lines[(which_intersect[i][0] + 1) % 2], coord_veh[i][-1], coord_veh[i][-2]) is None:
 									vehicle_vel_bool[i] = 3
 									velocity[i] = (distance*fps)/vehicle_frame_counter[i]
@@ -469,6 +489,7 @@ def run(source, mode=False, length=500):
 										required_value =  check_intersection(x, coord_veh[i][-1], coord_veh[i][-2])
 										ws.write(noOfConflicts+1, 0, str(required_value/fps))
 										ws.write(noOfConflicts+1, 1, str(pedestrian_sex[index]))
+									 	ws.write(noOfConflicts+1, 3, str(time_counter/fps))
 
 
 								index+=1
@@ -478,7 +499,9 @@ def run(source, mode=False, length=500):
 			cv2.polylines(frame, np.int32([l1]), False, (255, 0, 0))
 			cv2.polylines(frame, np.int32([l2]), False, (0, 255, 0))
 
+		time_counter += 1
 
+		cv2.putText(frame, str(time_counter / fps), (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 		cv2.imshow('frame', frame)
 	# When everything done, release the capture
 

@@ -8,6 +8,7 @@ def run(im, mode, for_pedestrian = False,):
     im_draw = im.copy()
     window_name = "Select objects to be tracked here."
     cv2.namedWindow(window_name, cv2.WINDOW_AUTOSIZE)
+    cv2.moveWindow(window_name,455,0)
     cv2.imshow(window_name, im_draw)
 
     if for_pedestrian:
@@ -33,28 +34,30 @@ def run(im, mode, for_pedestrian = False,):
 
             run.mouse_down = False
             pts_2.append((x, y))
-            print "object selected"
+            print "object selected\n"
             if mode and for_pedestrian:
-                print " press 'm' or 'f' on the window to assign sex: "
+                print "press 'm' or 'f' on the window to assign sex: "
                 if cv2.waitKey(-1) & 0xFF == ord('m'):
-                    "Added sex"
+                    print "Added sex 'm' "
                     ped_sex.append('m')
                 elif cv2.waitKey(-1) & 0xFF == ord('f'):
+                    print "Added sex 'f' "
                     ped_sex.append('f')
                 #print ped_sex
 
 
-            print "To delete the previously selected object,press key `d` to mark a new location."
+            print "\nTo delete the previously selected object,press key `d` to mark a new location.\n"
 
         elif event == cv2.EVENT_MOUSEMOVE and run.mouse_down == True:
             im_draw = im.copy()
             cv2.rectangle(im_draw, pts_1[-1], (x, y), (255,255,255), 3)
             cv2.imshow(window_name, im_draw)
+            cv2.moveWindow(window_name, 455, 0)
 
     #print "Press and release mouse around the object to be tracked. \n You can also select multiple objects."
     cv2.setMouseCallback(window_name, callback)
 
-    print "Press key `s` to continue with the selected points."
+    print "Press key `s` any time to save and \n           continue with the selected points."
     print "Press key `d` to discard the last object selected."
     print "Press key `q` to quit the program.\n"
 
@@ -66,11 +69,12 @@ def run(im, mode, for_pedestrian = False,):
             cv2.rectangle(im_disp, pt1, pt2, (255, 255, 255), 3)
         # Display the cropped images
         cv2.namedWindow(window_name_2, cv2.WINDOW_AUTOSIZE)
+        cv2.moveWindow(window_name_2, 910, 0)
         cv2.imshow(window_name_2, im_disp)
 
         key = cv2.waitKey(10) & 0xFF
         if key == ord('s'):
-            print "pressed s"
+            print "Saved."
             # Press key `s` to return the selected points
 
             point= [(tl + br) for tl, br in zip(pts_1, pts_2)]
@@ -93,8 +97,12 @@ def run(im, mode, for_pedestrian = False,):
                 pts_1.pop()
                 pts_2.pop()
                 if for_pedestrian:
-                 ped_sex.pop()
+                    try:
+                        ped_sex.pop()
+                    except:
+                        pass
                 im_disp = im.copy()
+                print "last object deleted"
             else:
                 print "No object to delete."
 

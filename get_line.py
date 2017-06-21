@@ -8,9 +8,10 @@ def run(im):
     im_disp = im.copy()
     window_name = "Draw line here."
     cv2.namedWindow(window_name,cv2.WINDOW_AUTOSIZE)
+    cv2.moveWindow(window_name, 910, 0)
 
     print " Drag across the screen to set lines.\n Do it twice"
-    print " After drawing the lines press 'q' to quit"
+    print " After drawing the lines press 'r' to resume\n"
 
     l1 = np.empty((2, 2), np.uint32)
     l2 = np.empty((2, 2), np.uint32)
@@ -48,7 +49,7 @@ def run(im):
         cv2.imshow(window_name,im_disp)
         key = cv2.waitKey(10) & 0xFF
 
-        if key == ord('q'):
+        if key == ord('r'):
             # Press key `q` to quit the program
             return list
             exit()
