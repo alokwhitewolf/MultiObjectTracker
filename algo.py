@@ -1,4 +1,4 @@
-''' Sample script to test detection of path pf two objects
+''' Sample script to test the logic of detection of path pf two objects
     This script when run, opens up a black window. Right clicking on it two provide points to draw a line in blue
     Left click to provide points for a red line.
 

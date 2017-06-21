@@ -30,17 +30,17 @@ def get_points(event, x, y, flags, param):
         if lpnts.size > 2:
             if mode == 0:
 
-                check(l1, lpnts[-1], lpnts[-2])
+                #check(l1, lpnts[-1], lpnts[-2])
                 if check(l1, lpnts[-1], lpnts[-2]):
                     which_intersect = 0
                     mode = 1
-                check(l2, lpnts[-1], lpnts[-2])
+                #check(l2, lpnts[-1], lpnts[-2])
                 if check(l2, lpnts[-1], lpnts[-2]):
                     which_intersect = 1
                     mode = 1
 
             elif mode == 1:
-                print "mode = 1"
+
                 counter += 1
                 if check(lines[(which_intersect + 1) % 2], lpnts[-1], lpnts[-2]):
                     mode = 3
@@ -60,7 +60,6 @@ points = get_line.run(img)
 l1 = np.empty((2, 2), np.int32)
 l1[0] = (points[0][0][0], points[0][0][1])
 l1[1] = (points[0][1][0], points[0][1][1])
-print type(points[0][0][0])
 
 l2 = np.empty((2, 2), np.int32)
 l2[0] = (points[1][0][0], points[1][0][1])
@@ -71,7 +70,7 @@ lines = [l1, l2]
 # print lines
 cv2.destroyWindow("Draw line here.")
 
-cv2.namedWindow('image')
+cv2.namedWindow('image', cv2.WINDOW_AUTOSIZE)
 cv2.setMouseCallback('image', get_points)
 
 cv2.polylines(img, np.int32([l1]), False, (255, 0, 0))

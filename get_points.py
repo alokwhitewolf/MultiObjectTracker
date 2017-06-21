@@ -7,7 +7,7 @@ def run(im, mode, for_pedestrian = False,):
     im_disp = im.copy()
     im_draw = im.copy()
     window_name = "Select objects to be tracked here."
-    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    cv2.namedWindow(window_name, cv2.WINDOW_AUTOSIZE)
     cv2.imshow(window_name, im_draw)
 
     if for_pedestrian:
@@ -65,7 +65,7 @@ def run(im, mode, for_pedestrian = False,):
             rects.append([pt1[0],pt2[0], pt1[1], pt2[1]])
             cv2.rectangle(im_disp, pt1, pt2, (255, 255, 255), 3)
         # Display the cropped images
-        cv2.namedWindow(window_name_2, cv2.WINDOW_NORMAL)
+        cv2.namedWindow(window_name_2, cv2.WINDOW_AUTOSIZE)
         cv2.imshow(window_name_2, im_disp)
 
         key = cv2.waitKey(10) & 0xFF

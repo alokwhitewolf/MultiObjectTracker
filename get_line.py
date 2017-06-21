@@ -7,7 +7,10 @@ trigger = 0
 def run(im):
     im_disp = im.copy()
     window_name = "Draw line here."
-    cv2.namedWindow(window_name,cv2.WINDOW_NORMAL)
+    cv2.namedWindow(window_name,cv2.WINDOW_AUTOSIZE)
+
+    print " Drag across the screen to set lines.\n Do it twice"
+    print " After drawing the lines press 'q' to quit"
 
     l1 = np.empty((2, 2), np.uint32)
     l2 = np.empty((2, 2), np.uint32)

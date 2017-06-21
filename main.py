@@ -34,6 +34,7 @@ def get_fps(source, Videolength):
 	cv2.destroyAllWindows()
 	fps = float(frame_counter/Videolength)
 	print "\nFPS is " +str(fps)+"\n"
+	#print "Total frames = "+str(frame_counter)
 	return fps
 
 #Algorithm to check intersection of line segments
@@ -63,8 +64,8 @@ def run(source, mode=False, length=500):
 	points_veh = []
 
 	# Variable so that the trajectories are  dynamically increased and decreased. Trajectory length is constant
-	#frame_var_ped = 70
-	#frame_var_veh = 10
+	frame_var_ped = 100
+	frame_var_veh = 100
 
 	#Store trajectory coordinates
 	coord_ped = []
@@ -75,9 +76,15 @@ def run(source, mode=False, length=500):
 	first_frame = True
 
 	#Store the distance between reference lines
-	distance = 0
+
+
+	# list of pedestrian id's whose path vehicle has encroached
+	collided_objects = []
+
+
 
 	if mode:
+		distance = 100
 
 		noOfConflicts = -1
 		wb = xlwt.Workbook()
@@ -85,10 +92,10 @@ def run(source, mode=False, length=500):
 		fps = get_fps(source, length)
 
 		ws.write(0, 0, "PET")
-		ws.write(0, 1, "SEX")
+		ws.write(0, 1, "Sex")
+		ws.write(0,2,"Speed")
 		### <-- Lists to be stored with respect to vehicle --> ###
-		# list of pedestrian id's whose path vehicle has encroached
-		collided_objects = []
+
 
 		#list to keep velocities of the vehicles
 		velocity = []
@@ -101,7 +108,10 @@ def run(source, mode=False, length=500):
 
 		#at which noOfConflict the vehicle has conflicts so that speed can be put
 		#in the database
-		which_frames = []
+		which_conflict = []
+
+		##Which assigned line the vehicle crosses first
+		which_intersect = []
 
 		###<--- Lists to be stored with respect to pedestrian -->###
 		#Store sex of the pedestrian
@@ -122,30 +132,39 @@ def run(source, mode=False, length=500):
 		#Resize window
 		frame = cv2.resize(frame, (500, 350))
 
+		#Make frame size fixed
+		cv2.namedWindow('frame', cv2.WINDOW_AUTOSIZE)
+
 		#############################
 		#If first frame, add two reference lines
 		#Whose real tine distance is known
 		###########################
+
 		if first_frame:
-			cv2.imshow('frame', frame)
-			points = get_line.run(frame)
+			if mode:
+				cv2.imshow('frame', frame)
+				points = get_line.run(frame)
 
-			l1 = np.empty((2, 2), np.int32)
-			l1[0] = (points[0][0][0], points[0][0][1])
-			l1[1] = (points[0][1][0], points[0][1][1])
+				l1 = np.empty((2, 2), np.int32)
+				l1[0] = (points[0][0][0], points[0][0][1])
+				l1[1] = (points[0][1][0], points[0][1][1])
 
-			l2 = np.empty((2, 2), np.int32)
-			l2[0] = (points[1][0][0], points[1][0][1])
-			l2[1] = (points[1][1][0], points[1][1][1])
+				l2 = np.empty((2, 2), np.int32)
+				l2[0] = (points[1][0][0], points[1][0][1])
+				l2[1] = (points[1][1][0], points[1][1][1])
 
-			lines = [l1, l2]
+				lines = [l1, l2]
 
-			print " press 'p' to pause video and add objects to track \n "
-			print " press 'd' while the video plays to delete an object \n "
-			print " press 'q' to quit \n "
+				print " press 'p' to pause video and add objects to track \n "
+				print " press 'd' while the video plays to delete an object \n "
+				print " press 'q' to quit \n "
 
-			cv2.destroyWindow("Draw line here.")
+				cv2.destroyWindow("Draw line here.")
 			first_frame = False
+
+		##############################################################################################################################
+		#Delete pedestrians and vehicles that go to extremes of frame automatically
+		##############################################################################################################################
 
 
 
@@ -187,8 +206,17 @@ def run(source, mode=False, length=500):
 						if input_b < 0:
 							break
 						elif input_b < len(points_veh):
-							#if mode:
-								#Condition for deleting and
+							if mode:
+								for x in which_conflict[input_b]:
+									ws.write(x, 2, velocity[input_b])
+
+								del velocity[input_b]
+								del vehicle_vel_bool[input_b]
+								del vehicle_frame_counter[input_b]
+								del which_conflict[input_b]
+								del which_intersect[input_b]
+
+
 
 							del points_veh[input_b]
 							del tracker_veh[input_b]
@@ -239,12 +267,13 @@ def run(source, mode=False, length=500):
 						points_ped.append(x)
 					for y in temp_sex:
 						pedestrian_sex.append(y)
+					print pedestrian_sex
+
+
 				else:
 					temp_ped = get_points.run(frame, mode, for_pedestrian=True)
 					for x in temp_ped:
 						points_ped.append(x)
-
-
 
 				#Add vehicles to track
 				print "\nAdd vehicles, if any\n"
@@ -253,7 +282,15 @@ def run(source, mode=False, length=500):
 				'''Can be made more efficient '''
 				for x in temp_veh:
 					points_veh.append(x)
-					#if mode:
+					collided_objects.append([])
+					if mode:
+						velocity.append(0)
+						vehicle_vel_bool.append(0)
+						vehicle_frame_counter.append(0)
+						which_conflict.append([])
+						which_intersect.append([-1])
+
+
 
 
 
@@ -302,8 +339,8 @@ def run(source, mode=False, length=500):
 					#update trajectory
 					coord_ped[i] = np.append(coord_ped[i],np.array([[(pt1[0]+pt2[0])/2,pt2[1]]]),axis = 0)
 					#Keep the length of trajectory constant
-					#if len(coord_ped[i])>frame_var:
-					#	coord_ped[i] = np.delete(coord_ped[i], (0), axis=0)
+					if len(coord_ped[i])>frame_var_ped:
+						coord_ped[i] = np.delete(coord_ped[i], (0), axis=0)
 
 					#draw trajectory
 					cv2.polylines(frame, [coord_ped[i]], False, (255, 0, 0),2)
@@ -327,34 +364,73 @@ def run(source, mode=False, length=500):
 
 					##update trajectory
 					coord_veh[i] = np.append(coord_veh[i], np.array([[(pt1[0] + pt2[0]) / 2, pt2[1]]]), axis=0)
-					#if len(coord_veh[i]) > frame_var:
-					#	coord_veh[i] = np.delete(coord_veh[i], (0), axis=0)
+					if len(coord_veh[i]) > frame_var_veh:
+						coord_veh[i] = np.delete(coord_veh[i], (0), axis=0)
 
 					# draw trajectory
 					cv2.polylines(frame, [coord_veh[i]], False, (0, 0, 255),2)
-
+###########################################################################################################
 					##Condition for finding velocity
-					#if mode:
+
+					if mode:
+						if len(coord_veh[i])>2:
+							if vehicle_vel_bool[i] == 0:
 
 
+								if not check_intersection(l1, coord_veh[i][-1], coord_veh[i][-2]) is None:
+									which_intersect[i][0] = 0
+									vehicle_vel_bool[i] = 1
+
+								if not check_intersection(l2, coord_veh[i][-1], coord_veh[i][-2]) is None:
+									which_intersect[i][0] = 1
+									vehicle_vel_bool[i] = 1
+									print "Second Line"
+
+							elif vehicle_vel_bool[i] == 1:
+
+								vehicle_frame_counter[i] += 1
+								print vehicle_frame_counter[i]
+								if not check_intersection(lines[(which_intersect[i][0] + 1) % 2], coord_veh[i][-1], coord_veh[i][-2]) is None:
+									vehicle_vel_bool[i] = 3
+									velocity[i] = (distance*fps)/vehicle_frame_counter[i]
+
+################################################################################################################
 					##Check for conflict
 					if len(coord_veh[i])>2:
-						index = 0
 						for x in coord_ped:
+							index = 0
 
-							if not check_intersection(x, coord_veh[i][-1], coord_veh[i][-2]) is None:
-								print "Path conflict detected"
-								if mode:
-									#Also keep a track record
-									noOfConflicts += 1
+							#See if already conflict occured
+							if not index in collided_objects[i]:
 
-									required_value =  check_intersection(x, coord_veh[i][-1], coord_veh[i][-2])
-									ws.write(noOfConflicts+1, 0, str(required_value/fps))
-									ws.write(noOfConflicts+1, 1, str(pedestrian_sex[index]))
-							index+=1
+								#Check for conflict
+								if not check_intersection(x, coord_veh[i][-1], coord_veh[i][-2]) is None:
+									print "Path conflict detected"
 
-		cv2.polylines(frame, np.int32([l1]), False, (255, 0, 0))
-		cv2.polylines(frame, np.int32([l2]), False, (0, 255, 0))
+									#update collidion in collided_objects
+									collided_objects[i].append(index)
+									if mode:
+										#Also keep a track record
+										noOfConflicts += 1
+
+										#Store the no of conflict to later put velocity in databe
+										#while deleting the vehicle
+										which_conflict[i].append(noOfConflicts+1)
+
+										#Find how many frames, behind the conflict occurs
+										required_value =  check_intersection(x, coord_veh[i][-1], coord_veh[i][-2])
+										ws.write(noOfConflicts+1, 0, str(required_value/fps))
+										ws.write(noOfConflicts+1, 1, str(pedestrian_sex[index]))
+
+
+								index+=1
+
+
+		if mode:
+			cv2.polylines(frame, np.int32([l1]), False, (255, 0, 0))
+			cv2.polylines(frame, np.int32([l2]), False, (0, 255, 0))
+
+
 		cv2.imshow('frame', frame)
 	# When everything done, release the capture
 
