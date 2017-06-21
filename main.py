@@ -84,15 +84,26 @@ def run(source, mode=False, length=500):
 		ws = wb.add_sheet("My Sheet")
 		fps = get_fps(source, length)
 
-		# Keep a track of assigned objects and their collision
-		collision_objects = []
+		### <-- Lists to be stored with respect to vehicle --> ###
+		# list of pedestrian id's whose path vehicle has encroached
+		collided_objects = []
+
 		#list to keep velocities of the vehicles
 		velocity = []
-		#bool to keep a counter of frames
+
+		#bool to see if it's between the two reference lines
 		vehicle_vel_bool = []
-		#counter
-		vehicle_veh_counter = []
+
+		#counter of frames which the vehicle spends between the reference lines
+		vehicle_frame_counter = []
+
+		#at which noOfConflict the vehicle has conflicts so that speed can be put
+		#in the database
 		which_frames = []
+
+		###<--- Lists to be stored with respect to pedestrian -->###
+		#Store sex of the pedestrian
+		sex = []
 
 	cap = cv2.VideoCapture(source)
 	if not cap.isOpened():
@@ -127,12 +138,14 @@ def run(source, mode=False, length=500):
 
 			lines = [l1, l2]
 
+			print " press 'p' to pause video and add objects to track \n "
+			print " press 'd' while the video plays to delete an object \n "
+			print " press 'q' to quit \n "
+
 			cv2.destroyWindow("Draw line here.")
 			first_frame = False
 
-		print " press 'p' to pause video and add objects to track \n "
-		print " press 'd' while the video plays to delete an object \n "
-		print " press 'q' to quit \n "
+
 
 		if points_ped or points_veh:
 			key = cv2.waitKey(1) & 0xFF
@@ -152,10 +165,11 @@ def run(source, mode=False, length=500):
 					input_a = -2
 
 					while True:
-						input_a = int(raw_input(" Enter id of the pedestrian to delete , -1 to move to other :"))
+						input_a = int(raw_input(" Enter id(on the terminal)  of the pedestrian to delete , -1 to move to other :"))
 						if input_a == -1:
 							break
 						elif input_a < len(points_ped):
+							#Also delete sex of the pedestrian
 							del points_ped[input_a]
 							del tracker_ped[input_a]
 							del coord_ped[input_a]
@@ -166,7 +180,7 @@ def run(source, mode=False, length=500):
 
 				elif input == 'b':
 					while True:
-						input_b = int(raw_input(" Enter id of the vehicle to delete , -1 to move to other :"))
+						input_b = int(raw_input(" Enter id(on the terminal)  of the vehicle to delete , -1 to move to other :"))
 						if input_b < 0:
 							break
 						elif input_b < len(points_veh):
@@ -216,13 +230,13 @@ def run(source, mode=False, length=500):
 
 				#Add Pedestrians to track
 				print "\nAdd Pedestrians, if any\n"
-				temp_ped=get_points.run(frame)
+				temp_ped=get_points.run(frame,mode,for_pedestrian=True)
 				for x in temp_ped:
 					points_ped.append(x)
 
 				#Add vehicles to track
 				print "\nAdd vehicles, if any\n"
-				temp_veh=get_points.run(frame)
+				temp_veh=get_points.run(frame,mode,for_pedestrian=False)
 
 				'''Can be made more efficient '''
 				for x in temp_veh:
