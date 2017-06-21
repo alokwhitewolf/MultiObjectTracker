@@ -75,7 +75,13 @@ def run(im, mode, for_pedestrian = False,):
 
             point= [(tl + br) for tl, br in zip(pts_1, pts_2)]
             corrected_point=check_point(point)
-            return corrected_point
+
+            ##Return tuple for pedestrain
+            if for_pedestrian and mode:
+                return corrected_point, ped_sex
+            else:
+                return corrected_point
+
         elif key== ord('q'):
             # Press key `q` to quit the program
             print "Quitting without saving."

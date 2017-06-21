@@ -84,6 +84,8 @@ def run(source, mode=False, length=500):
 		ws = wb.add_sheet("My Sheet")
 		fps = get_fps(source, length)
 
+		ws.write(0, 0, "PET")
+		ws.write(0, 1, "SEX")
 		### <-- Lists to be stored with respect to vehicle --> ###
 		# list of pedestrian id's whose path vehicle has encroached
 		collided_objects = []
@@ -103,7 +105,7 @@ def run(source, mode=False, length=500):
 
 		###<--- Lists to be stored with respect to pedestrian -->###
 		#Store sex of the pedestrian
-		sex = []
+		pedestrian_sex = []
 
 	cap = cv2.VideoCapture(source)
 	if not cap.isOpened():
@@ -150,7 +152,7 @@ def run(source, mode=False, length=500):
 		if points_ped or points_veh:
 			key = cv2.waitKey(1) & 0xFF
 		else:
-			key = cv2.waitKey(30) & 0xFF
+			key = cv2.waitKey(70) & 0xFF
 
 		#To delete already selected objects
 		if key == ord('d'):
@@ -169,7 +171,8 @@ def run(source, mode=False, length=500):
 						if input_a == -1:
 							break
 						elif input_a < len(points_ped):
-							#Also delete sex of the pedestrian
+							if mode:
+								del pedestrian_sex[input_a]
 							del points_ped[input_a]
 							del tracker_ped[input_a]
 							del coord_ped[input_a]
@@ -230,9 +233,18 @@ def run(source, mode=False, length=500):
 
 				#Add Pedestrians to track
 				print "\nAdd Pedestrians, if any\n"
-				temp_ped=get_points.run(frame,mode,for_pedestrian=True)
-				for x in temp_ped:
-					points_ped.append(x)
+				if mode:
+					temp_ped, temp_sex = get_points.run(frame,mode,for_pedestrian=True)
+					for x in temp_ped:
+						points_ped.append(x)
+					for y in temp_sex:
+						pedestrian_sex.append(y)
+				else:
+					temp_ped = get_points.run(frame, mode, for_pedestrian=True)
+					for x in temp_ped:
+						points_ped.append(x)
+
+
 
 				#Add vehicles to track
 				print "\nAdd vehicles, if any\n"
@@ -327,6 +339,7 @@ def run(source, mode=False, length=500):
 
 					##Check for conflict
 					if len(coord_veh[i])>2:
+						index = 0
 						for x in coord_ped:
 
 							if not check_intersection(x, coord_veh[i][-1], coord_veh[i][-2]) is None:
@@ -336,7 +349,9 @@ def run(source, mode=False, length=500):
 									noOfConflicts += 1
 
 									required_value =  check_intersection(x, coord_veh[i][-1], coord_veh[i][-2])
-									ws.write(noOfConflicts, 0, str(required_value*fps))
+									ws.write(noOfConflicts+1, 0, str(required_value/fps))
+									ws.write(noOfConflicts+1, 1, str(pedestrian_sex[index]))
+							index+=1
 
 		cv2.polylines(frame, np.int32([l1]), False, (255, 0, 0))
 		cv2.polylines(frame, np.int32([l2]), False, (0, 255, 0))
