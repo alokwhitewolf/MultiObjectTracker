@@ -81,7 +81,9 @@ def run(source, mode=False, length=500):
 	# list of pedestrian id's whose path vehicle has encroached
 	collided_objects = []
 
-
+	## For auto deletion of pedestrians
+	to_b_deleted_ped = []
+	to_b_deleted_veh = []
 
 	if mode:
 		distance = 100
@@ -131,6 +133,7 @@ def run(source, mode=False, length=500):
 
 		#Resize window
 		frame = cv2.resize(frame, (500, 350))
+		height, width = frame.shape[:2]
 
 		#Make frame size fixed
 		cv2.namedWindow('frame', cv2.WINDOW_AUTOSIZE)
@@ -164,6 +167,42 @@ def run(source, mode=False, length=500):
 
 		##############################################################################################################################
 		#Delete pedestrians and vehicles that go to extremes of frame automatically
+
+		if to_b_deleted_ped:
+			for x in to_b_deleted_ped:
+				if mode:
+					del pedestrian_sex[x]
+				del points_ped[x]
+				del tracker_ped[x]
+				del coord_ped[x]
+
+			#Clear the record so that delete list can be refreshed
+			to_b_deleted_ped = []
+
+
+
+
+
+		if to_b_deleted_veh:
+			for z in to_b_deleted_veh:
+				if mode:
+					for x in which_conflict[z]:
+						ws.write(x, 2, velocity[z])
+
+					del velocity[z]
+					del vehicle_vel_bool[z]
+					del vehicle_frame_counter[z]
+					del which_conflict[z]
+					del which_intersect[z]
+
+				del points_veh[z]
+				del tracker_veh[z]
+				del coord_veh[z]
+
+			# Clear the record so that the delete list can be refreshed
+			to_b_deleted_veh = []
+
+
 		##############################################################################################################################
 
 
@@ -342,6 +381,9 @@ def run(source, mode=False, length=500):
 					if len(coord_ped[i])>frame_var_ped:
 						coord_ped[i] = np.delete(coord_ped[i], (0), axis=0)
 
+					##Autodelete if the object goes to some extreme of the image
+					if (not (width*.05<coord_ped[i][-1][0]< width*.95)) or (not (height*.05<coord_ped[i][-1][1]< height*.95)):
+						to_b_deleted_ped.append(i)
 					#draw trajectory
 					cv2.polylines(frame, [coord_ped[i]], False, (255, 0, 0),2)
 
@@ -369,6 +411,12 @@ def run(source, mode=False, length=500):
 
 					# draw trajectory
 					cv2.polylines(frame, [coord_veh[i]], False, (0, 0, 255),2)
+
+					##Autodelete if the object goes to some extreme of the image
+					if (not (width*.05<coord_veh[i][-1][0]< width*.95)) or (not (height*.05<coord_veh[i][-1][1]< height*.95)):
+						to_b_deleted_veh.append(i)
+
+
 ###########################################################################################################
 					##Condition for finding velocity
 
