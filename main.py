@@ -1,3 +1,18 @@
+'''
+############################################################
+ Alok Kumar Bishoyi
+ Indian Institute of Technology, Bombay
+
+This code is a hack on dlib module and opencv to enable it for tracking multiiple objects
+It has two modes. One is simply for tracking user defined objects of two categories
+( referred here as vehicles and pedestrians)
+
+The other mode is for analyzing the data obtained from the tracking for purposes of the project.
+
+
+############################################################
+
+'''
 import numpy as np
 import cv2
 import argparse as ap
@@ -8,13 +23,15 @@ import intersect
 import xlwt
 
 
-
+#Default open webcam if video source not specified
 source=0
 
+
 #Function to calculate the frames per second of the video.
-# We do it manually by calculating Total_no_of_frames/Total_run_time
-#Run_time of the video is a prerequisite
-#Fps calculation is note needed when mode = False in run()
+#We do it manually by calculating Total_no_of_frames/Total_run_time
+#Run_time of the video in seconds is a prerequisite
+#Run time of the video is provided as flags if we wish to analyze the data (mode = True, in def run)
+#Fps calculation is not needed when mode = False in run()
 
 def get_fps(source, Videolength):
 	cap = cv2.VideoCapture("docs/video/traffic2")
@@ -34,7 +51,7 @@ def get_fps(source, Videolength):
 	cv2.destroyAllWindows()
 	fps = float(frame_counter/Videolength)
 	print "\nFPS is " +str(fps)+"\n"
-	#print "Total frames = "+str(frame_counter)
+
 	return fps
 
 #Algorithm to check intersection of line segments
@@ -49,7 +66,8 @@ def check_intersection(array, new_pnt, last_point):
 
 
 #When mode = True, the Post Encroachment Time is stored in excel sheet.
-#When mode is false, only conflict times are detected and no data is stored.
+#Various analysis of the video and the tracking is then done
+#When mode is false, it only prints when trajectories of different types of object intersect.
 #when mode is false, length parameter is irrelevant
 
 def run(source, mode=False, length=500):
@@ -71,13 +89,6 @@ def run(source, mode=False, length=500):
 	coord_ped = []
 	coord_veh = []
 
-
-	#If first frame or not
-	first_frame = True
-
-	#Store the distance between reference lines
-
-
 	# list of pedestrian id's whose path vehicle has encroached
 	collided_objects = []
 
@@ -95,11 +106,23 @@ def run(source, mode=False, length=500):
 	trajectory_veh = []
 
 	if mode:
+		# If first frame or not
+		# In mode=True, we will have to do stuff in the first frame for analysis purpose
+		first_frame = True
+
+		# Distance between two reference lines that we will provide in first frame
+		#The reference lines are two lines whose length we know in real-world
+		#These lines will help in analysis accurately with real word distacnces/dimensions
 		distance = 100
 
+		#initialize no of conflict between trajectories
 		noOfConflicts = -1
+
+		#set up excel sheet for storing data
 		wb = xlwt.Workbook()
 		ws = wb.add_sheet("My Sheet")
+
+		#Get fps of the source video.
 		fps = get_fps(source, length)
 
 		frame_var_ped = 20 * fps
@@ -111,8 +134,7 @@ def run(source, mode=False, length=500):
 		ws.write(0,2,"Speed")
 		ws.write(0,3,"Time")
 		ws.write(0,4, "Coordinates")
-		### <-- Lists to be stored with respect to vehicle --> ###
-
+		### <-- Lists/data to be stored with respect to vehicle --> ###
 
 		#list to keep velocities of the vehicles
 		velocity = []
@@ -123,11 +145,11 @@ def run(source, mode=False, length=500):
 		#counter of frames which the vehicle spends between the reference lines
 		vehicle_frame_counter = []
 
-		#at which noOfConflict the vehicle has conflicts so that speed can be put
-		#in the database
+		#at which noOfConflict in the sheet, the desired vehicle has conflicts so that speed can be put
+		#in the database in the same row
 		which_conflict = []
 
-		##Which assigned line the vehicle crosses first
+		##Which assigned reference line the vehicle crosses first
 		which_intersect = []
 
 		###<--- Lists to be stored with respect to pedestrian -->###
@@ -187,8 +209,8 @@ def run(source, mode=False, length=500):
 				cv2.destroyWindow("Draw line here.")
 			first_frame = False
 
+		# Delete pedestrians and vehicles that go to extremes of frame automatically
 ##############################################################################################################################
-		#Delete pedestrians and vehicles that go to extremes of frame automatically
 		if to_b_deleted_ped:
 			for x in to_b_deleted_ped:
 				if mode:
@@ -302,14 +324,7 @@ def run(source, mode=False, length=500):
 								del which_intersect[input_b]
 								del collided_objects[input_b]
 
-								#print "Deleting . . "
-								#print coord_veh[input_b]
-
 								trajectory_veh.append(coord_veh[input_b])
-								#print "list"
-								#print trajectory_veh
-
-
 
 							del points_veh[input_b]
 							del tracker_veh[input_b]
@@ -396,7 +411,6 @@ def run(source, mode=False, length=500):
 							vehicle_frame_counter.append(0)
 							which_conflict.append([])
 							which_intersect.append([-1])
-
 
 				if points_ped:
 					#initiate tracker
@@ -534,20 +548,22 @@ def run(source, mode=False, length=500):
 
 										#Find how many frames, behind the conflict occurs
 										required_value =  check_intersection(x, coord_veh[i][-1], coord_veh[i][-2])
+										#Store in database
 										ws.write(noOfConflicts+1, 0, str(required_value/fps))
 										ws.write(noOfConflicts+1, 1, str(pedestrian_sex[index]))
 									 	ws.write(noOfConflicts+1, 3, str(time_counter/fps))
 										ws.write(noOfConflicts+1, 4, str(coord_veh[i][-1]))
-
-
 								index+=1
 
 
 		if mode:
+			#Draw reference lines
 			cv2.polylines(frame, np.int32([l1]), False, (255, 0, 0))
 			cv2.polylines(frame, np.int32([l2]), False, (0, 255, 0))
+
+			#Update Counter for getting time
 			time_counter += 1
-			cv2.putText(frame, str(time_counter / fps), (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 3)
+			cv2.putText(frame, str(time_counter / fps), (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 3)
 
 
 		cv2.imshow('frame', frame)
@@ -557,7 +573,7 @@ def run(source, mode=False, length=500):
 
 	if mode:
 		#print conflict_coord
-		###Save th
+		###Save the sheet
 		wb.save("PET_Values.xls")
 
 		###Show all the conflict points in a new window consisting of the first frame of the object
