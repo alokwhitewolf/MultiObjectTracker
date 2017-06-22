@@ -81,9 +81,14 @@ def run(source, mode=False, length=500):
 	# list of pedestrian id's whose path vehicle has encroached
 	collided_objects = []
 
-	## For auto deletion of pedestrians
+	## For auto deletion of pedestrians and vehicles
+	##if they wander in extremeties of the screen
 	to_b_deleted_ped = []
 	to_b_deleted_veh = []
+
+	##To store all coordinates of points of conflict
+	#to show later
+	conflict_coord = []
 
 	if mode:
 		distance = 100
@@ -96,10 +101,12 @@ def run(source, mode=False, length=500):
 		frame_var_ped = 20 * fps
 		frame_var_veh = 10 * fps
 
+		#Initialize the columns of the sheet
 		ws.write(0, 0, "PET")
 		ws.write(0, 1, "Sex")
 		ws.write(0,2,"Speed")
 		ws.write(0,3,"Time")
+		ws.write(0,4, "Coordinates")
 		### <-- Lists to be stored with respect to vehicle --> ###
 
 
@@ -131,7 +138,7 @@ def run(source, mode=False, length=500):
 	#variable to track how many frames has been processed
 	time_counter = 0
 
-	while(True):
+	while(cap.isOpened()):
 		# Capture frame-by-frame
 
 		ret, frame = cap.read()
@@ -176,46 +183,11 @@ def run(source, mode=False, length=500):
 				cv2.destroyWindow("Draw line here.")
 			first_frame = False
 
-		##############################################################################################################################
+##############################################################################################################################
 		#Delete pedestrians and vehicles that go to extremes of frame automatically
 
-		if to_b_deleted_ped:
-			for x in to_b_deleted_ped:
-				if mode:
-					#try:
-					del pedestrian_sex[x]
-				del points_ped[x]
-				del tracker_ped[x]
-				del coord_ped[x]
 
-			#Clear the record so that delete list can be refreshed
-			to_b_deleted_ped = []
-
-
-
-
-
-		if to_b_deleted_veh:
-			for z in to_b_deleted_veh:
-				if mode:
-					for x in which_conflict[z]:
-						ws.write(x, 2, velocity[z])
-
-					del velocity[z]
-					del vehicle_vel_bool[z]
-					del vehicle_frame_counter[z]
-					del which_conflict[z]
-					del which_intersect[z]
-
-				del points_veh[z]
-				del tracker_veh[z]
-				del coord_veh[z]
-
-			# Clear the record so that the delete list can be refreshed
-			to_b_deleted_veh = []
-
-
-		##############################################################################################################################
+################################################################################################################################
 
 
 
@@ -274,6 +246,7 @@ def run(source, mode=False, length=500):
 								del vehicle_frame_counter[input_b]
 								del which_conflict[input_b]
 								del which_intersect[input_b]
+								del collided_objects[input_b]
 
 
 
@@ -322,32 +295,48 @@ def run(source, mode=False, length=500):
 				print "\nAdd Pedestrians . . \nDrag rectangles across the frame to assign objects\n"
 				if mode:
 					temp_ped, temp_sex = get_points.run(frame,mode,for_pedestrian=True)
-					for x in temp_ped:
-						points_ped.append(x)
-					for y in temp_sex:
-						pedestrian_sex.append(y)
+
+					if temp_ped == "QUIT":
+						cv2.destroyWindow("Select objects to be tracked here.")
+						cv2.destroyWindow("Objects to be tracked.")
+						break
+					else:
+						for x in temp_ped:
+							points_ped.append(x)
+						for y in temp_sex:
+							pedestrian_sex.append(y)
 
 
 
 				else:
-					temp_ped = get_points.run(frame, mode, for_pedestrian=True)
-					for x in temp_ped:
-						points_ped.append(x)
+					if temp_ped == "QUIT":
+						cv2.destroyWindow("Select objects to be tracked here.")
+						cv2.destroyWindow("Objects to be tracked.")
+						break
+					else:
+						temp_ped = get_points.run(frame, mode, for_pedestrian=True)
+						for x in temp_ped:
+							points_ped.append(x)
 
 				#Add vehicles to track
 				print "\nAdd vehicles, if any\n"
 				temp_veh=get_points.run(frame,mode,for_pedestrian=False)
 
 				'''Can be made more efficient '''
-				for x in temp_veh:
-					points_veh.append(x)
-					collided_objects.append([])
-					if mode:
-						velocity.append(0)
-						vehicle_vel_bool.append(0)
-						vehicle_frame_counter.append(0)
-						which_conflict.append([])
-						which_intersect.append([-1])
+				if temp_veh == "QUIT":
+					cv2.destroyWindow("Select objects to be tracked here.")
+					cv2.destroyWindow("Objects to be tracked.")
+					break
+				else:
+					for x in temp_veh:
+						points_veh.append(x)
+						collided_objects.append([])
+						if mode:
+							velocity.append(0)
+							vehicle_vel_bool.append(0)
+							vehicle_frame_counter.append(0)
+							which_conflict.append([])
+							which_intersect.append([-1])
 
 
 
@@ -475,6 +464,9 @@ def run(source, mode=False, length=500):
 								if not check_intersection(x, coord_veh[i][-1], coord_veh[i][-2]) is None:
 									print "Path conflict detected"
 
+									##Add the coordinates of the collision region to database
+									conflict_coord.append(coord_veh[i][-1])
+
 									#update collidion in collided_objects
 									collided_objects[i].append(index)
 									if mode:
@@ -490,6 +482,7 @@ def run(source, mode=False, length=500):
 										ws.write(noOfConflicts+1, 0, str(required_value/fps))
 										ws.write(noOfConflicts+1, 1, str(pedestrian_sex[index]))
 									 	ws.write(noOfConflicts+1, 3, str(time_counter/fps))
+										ws.write(noOfConflicts+1, 4, str(coord_veh[i][-1]))
 
 
 								index+=1
@@ -501,15 +494,38 @@ def run(source, mode=False, length=500):
 
 		time_counter += 1
 
-		cv2.putText(frame, str(time_counter / fps), (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+		cv2.putText(frame, str(time_counter / fps), (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 3)
 		cv2.imshow('frame', frame)
 	# When everything done, release the capture
 
 	cap.release()
 
-
 	if mode:
-		wb.save("myworkbook.xls")
+		#print conflict_coord
+		###Save th
+		wb.save("PET_Values.xls")
+
+		###Show all the conflict points in a new window consisting of the first frame of the object
+		cap = cv2.VideoCapture('docs/video/traffic2')
+
+		if (cap.isOpened()):
+			ret, frame = cap.read()
+
+		frame = cv2.resize(frame, (450, 350))
+
+		for x in conflict_coord:
+			cv2.circle(frame, (x[0], x[1]), 6, (255, 255, 255), -1)
+			cv2.circle(frame, (x[0], x[1]), 6, (0, 0, 255), 1)
+
+
+		while (1):
+			cv2.imshow('Conflict Points', frame)
+
+			if cv2.waitKey(1) & 0xFF == ord('q'):
+				break
+
+		cap.release()
+		cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":

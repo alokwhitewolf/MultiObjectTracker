@@ -1,6 +1,5 @@
 # Import the required modules
 import cv2
-import argparse
 import numpy as np
 
 def run(im, mode, for_pedestrian = False,):
@@ -88,8 +87,16 @@ def run(im, mode, for_pedestrian = False,):
 
         elif key== ord('q'):
             # Press key `q` to quit the program
-            print "Quitting without saving."
-            exit()
+            #print "Quitting without saving."
+            #exit()
+
+
+            if for_pedestrian and mode:
+                return "QUIT", "QUIT"
+            else:
+                return "QUIT"
+
+
         elif key == ord('d'):
             # Press ket `d` to delete the last rectangular region
             if run.mouse_down == False and pts_1:
