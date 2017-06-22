@@ -2,6 +2,8 @@
 import cv2
 import numpy as np
 
+
+
 def run(im, mode, for_pedestrian = False,):
     im_disp = im.copy()
     im_draw = im.copy()
@@ -10,8 +12,10 @@ def run(im, mode, for_pedestrian = False,):
     cv2.moveWindow(window_name,455,0)
     cv2.imshow(window_name, im_draw)
 
-    if for_pedestrian:
+    if mode and for_pedestrian:
         ped_sex = []
+
+
 
     # List containing top-left and bottom-right to crop the image.
     pts_1 = []
@@ -19,10 +23,14 @@ def run(im, mode, for_pedestrian = False,):
 
     rects = []
     run.mouse_down = False
+    run.adding_sex = True
+
+
 
     def callback(event, x, y, flags, param):
 
-        if event == cv2.EVENT_LBUTTONDOWN:
+
+        if event == cv2.EVENT_LBUTTONDOWN and run.adding_sex == True:
 
 
             pts_1.append((x, y))
@@ -36,12 +44,15 @@ def run(im, mode, for_pedestrian = False,):
             print "object selected\n"
             if mode and for_pedestrian:
                 print "press 'm' or 'f' on the window to assign sex: "
+                run.adding_sex = False
                 if cv2.waitKey(-1) & 0xFF == ord('m'):
                     print "Added sex 'm' "
                     ped_sex.append('m')
+                    run.adding_sex = True
                 elif cv2.waitKey(-1) & 0xFF == ord('f'):
                     print "Added sex 'f' "
                     ped_sex.append('f')
+                    run.adding_sex = True
                 #print ped_sex
 
 
@@ -103,10 +114,10 @@ def run(im, mode, for_pedestrian = False,):
 
                 pts_1.pop()
                 pts_2.pop()
-                if for_pedestrian:
+                if for_pedestrian and mode:
                     try:
                         ped_sex.pop()
-                    except:
+                    except IndexError:
                         pass
                 im_disp = im.copy()
                 print "last object deleted"

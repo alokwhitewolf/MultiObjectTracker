@@ -90,6 +90,10 @@ def run(source, mode=False, length=500):
 	#to show later
 	conflict_coord = []
 
+	##Keep a list of every trajectory to display later
+	trajectory_ped = []
+	trajectory_veh = []
+
 	if mode:
 		distance = 100
 
@@ -185,9 +189,52 @@ def run(source, mode=False, length=500):
 
 ##############################################################################################################################
 		#Delete pedestrians and vehicles that go to extremes of frame automatically
+		if to_b_deleted_ped:
+			for x in to_b_deleted_ped:
+				if mode:
+					# try:
+					del pedestrian_sex[x]
+					##Delete list of collided vehicles mapped with vehicles
+					for i in collided_objects:
+						try:
+							i.remove(x)
+						except ValueError:
+							pass
+
+					trajectory_ped.append(coord_ped[x])
+
+				del points_ped[x]
+				del tracker_ped[x]
+				del coord_ped[x]
+
+			# Clear the record so that delete list can be refreshed
+			to_b_deleted_ped = []
+
+		if to_b_deleted_veh:
+			for z in to_b_deleted_veh:
+				if mode:
+					for x in which_conflict[z]:
+						ws.write(x, 2, velocity[z])
+
+					del velocity[z]
+					del vehicle_vel_bool[z]
+					del vehicle_frame_counter[z]
+					del which_conflict[z]
+					del which_intersect[z]
+					del collided_objects[z]
+
+					trajectory_veh.append(coord_veh[z])
+
+				del points_veh[z]
+				del tracker_veh[z]
+				del coord_veh[z]
+
+			# Clear the record so that the delete list can be refreshed
+			to_b_deleted_veh = []
 
 
-################################################################################################################################
+
+		################################################################################################################################
 
 
 
@@ -219,6 +266,13 @@ def run(source, mode=False, length=500):
 						elif input_a < len(points_ped):
 							if mode:
 								del pedestrian_sex[input_a]
+								for i in collided_objects:
+									try:
+										i.remove(input_a)
+									except ValueError:
+										pass
+
+								trajectory_ped.append(coord_ped[input_a])
 							del points_ped[input_a]
 							del tracker_ped[input_a]
 							del coord_ped[input_a]
@@ -248,12 +302,20 @@ def run(source, mode=False, length=500):
 								del which_intersect[input_b]
 								del collided_objects[input_b]
 
+								#print "Deleting . . "
+								#print coord_veh[input_b]
+
+								trajectory_veh.append(coord_veh[input_b])
+								#print "list"
+								#print trajectory_veh
+
 
 
 							del points_veh[input_b]
 							del tracker_veh[input_b]
 							del coord_veh[input_b]
 							print" Object deleted successfully"
+
 						else:
 							print " Enter a valid id! "
 						pass
@@ -305,16 +367,13 @@ def run(source, mode=False, length=500):
 							points_ped.append(x)
 						for y in temp_sex:
 							pedestrian_sex.append(y)
-
-
-
 				else:
-					if temp_ped == "QUIT":
-						cv2.destroyWindow("Select objects to be tracked here.")
-						cv2.destroyWindow("Objects to be tracked.")
-						break
+					temp_ped = get_points.run(frame, mode, for_pedestrian=True)
+					if temp_ped=="QUIT":
+							cv2.destroyWindow("Select objects to be tracked here.")
+							cv2.destroyWindow("Objects to be tracked.")
+							break
 					else:
-						temp_ped = get_points.run(frame, mode, for_pedestrian=True)
 						for x in temp_ped:
 							points_ped.append(x)
 
@@ -337,10 +396,6 @@ def run(source, mode=False, length=500):
 							vehicle_frame_counter.append(0)
 							which_conflict.append([])
 							which_intersect.append([-1])
-
-
-
-
 
 
 				if points_ped:
@@ -491,10 +546,10 @@ def run(source, mode=False, length=500):
 		if mode:
 			cv2.polylines(frame, np.int32([l1]), False, (255, 0, 0))
 			cv2.polylines(frame, np.int32([l2]), False, (0, 255, 0))
+			time_counter += 1
+			cv2.putText(frame, str(time_counter / fps), (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 3)
 
-		time_counter += 1
 
-		cv2.putText(frame, str(time_counter / fps), (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 3)
 		cv2.imshow('frame', frame)
 	# When everything done, release the capture
 
@@ -513,6 +568,17 @@ def run(source, mode=False, length=500):
 
 		frame = cv2.resize(frame, (450, 350))
 
+		im_veh = frame.copy()
+		im_ped = frame.copy()
+		#Draw trajectories
+
+		for trajectories in trajectory_veh:
+			cv2.polylines(im_veh, [trajectories], False, (0, 0, 255), 1)
+
+		for trajectories in trajectory_ped:
+			cv2.polylines(im_ped, [trajectories],False, (255,0,255), 1)
+
+		##Draw circles
 		for x in conflict_coord:
 			cv2.circle(frame, (x[0], x[1]), 6, (255, 255, 255), -1)
 			cv2.circle(frame, (x[0], x[1]), 6, (0, 0, 255), 1)
@@ -520,6 +586,9 @@ def run(source, mode=False, length=500):
 
 		while (1):
 			cv2.imshow('Conflict Points', frame)
+			cv2.imshow('Vehicle trajectories', im_veh)
+			cv2.imshow('Pedestrian trajectories' , im_ped)
+
 
 			if cv2.waitKey(1) & 0xFF == ord('q'):
 				break
