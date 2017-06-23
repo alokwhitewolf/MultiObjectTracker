@@ -84,7 +84,7 @@ After the video playback is over, or if you quit the program inbetween, it does 
  
 * Trajectory of the vehicles and pedestrians we have tracked - <br>
  
- ![Image](docs/images/mode_tracteory.png)
+ ![Image](docs/images/mode_trajectory.png)
  
 * Saves an excel sheet whose column headers are PET values, Sex of the pedestrian, Speed of the vehicle, Time in the video at which the said conflict took place and the coordinate in the video where it took place
 
