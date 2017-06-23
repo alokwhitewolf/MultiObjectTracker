@@ -70,7 +70,7 @@ def check_intersection(array, new_pnt, last_point):
 #When mode is false, it only prints when trajectories of different types of object intersect.
 #when mode is false, length parameter is irrelevant
 
-def run(source, mode=False, length=500):
+def run(source, mode=False, length=500, dist=100):
 
 	if mode:
 		print "runtime of the video in seconds is - "+str(length)+" seconds"
@@ -105,15 +105,17 @@ def run(source, mode=False, length=500):
 	trajectory_ped = []
 	trajectory_veh = []
 
+	# If first frame or not
+	# In mode=True, we will have to do stuff in the first frame for analysis purpose
+	first_frame = True
+
 	if mode:
-		# If first frame or not
-		# In mode=True, we will have to do stuff in the first frame for analysis purpose
-		first_frame = True
+
 
 		# Distance between two reference lines that we will provide in first frame
 		#The reference lines are two lines whose length we know in real-world
 		#These lines will help in analysis accurately with real word distacnces/dimensions
-		distance = 100
+		distance = dist
 
 		#initialize no of conflict between trajectories
 		noOfConflicts = -1
@@ -169,7 +171,8 @@ def run(source, mode=False, length=500):
 
 		ret, frame = cap.read()
 		if not ret:
-			print "Unable to capture device"
+			print "Unable to capture device or video ended.\nQuitting . . ."
+			break
 
 		#Resize window
 		frame = cv2.resize(frame, (450, 350))
@@ -263,13 +266,19 @@ def run(source, mode=False, length=500):
 		if points_ped or points_veh:
 			key = cv2.waitKey(1) & 0xFF
 		else:
-			key = cv2.waitKey(70) & 0xFF
+			key = cv2.waitKey(50) & 0xFF
 
 		#To delete already selected objects
 		if key == ord('d'):
-			print "\n press 'a' to delete a pedestrian "
-			print " press 'b' to delete a vehicle "
-			print " press 'r' to resume with tracking \n"
+			if mode:
+				print "\n press 'a' to delete a pedestrian "
+				print " press 'b' to delete a vehicle "
+				print " press 'r' to resume with tracking \n"
+			else:
+				print "\n press 'a' to delete an object of type-A "
+				print " press 'b' to delete an object of type-B  "
+				print " press 'r' to resume with tracking \n"
+
 
 			while True:
 				#input = raw_input(" \n Press appropriate key: ")
@@ -279,12 +288,26 @@ def run(source, mode=False, length=500):
 					input_a = -2
 
 					while True:
-						input_a = int(raw_input(" Enter id(on the terminal)  of the pedestrian to delete , -1 to move to other options :"))
+
+						if mode:
+							input_a = int(raw_input(" Enter id(on the terminal)  of the pedestrian to delete , -1 to move to other options :"))
+						else:
+							input_a = int(raw_input(
+								" Enter id(on the terminal)  of the type-A object to delete , -1 to move to other options :"))
+
 						if input_a == -1:
-							print "\n press 'a' to delete a pedestrian "
-							print " press 'b' to delete a vehicle "
-							print " press 'r' to resume with tracking "
-							break
+
+							if mode:
+								print "\n press 'a' to delete a pedestrian "
+								print " press 'b' to delete a vehicle "
+								print " press 'r' to resume with tracking "
+								break
+							else:
+								print "\n press 'a' to delete an object of type-A "
+								print " press 'b' to delete an object of type-B "
+								print " press 'r' to resume with tracking "
+								break
+
 						elif input_a < len(points_ped):
 							if mode:
 								del pedestrian_sex[input_a]
@@ -306,12 +329,26 @@ def run(source, mode=False, length=500):
 
 				elif k == ord('b'):
 					while True:
-						input_b = int(raw_input(" Enter id(on the terminal)  of the vehicle to delete , -1 to move to other :"))
+
+						if mode:
+							input_b = int(raw_input(" Enter id(on the terminal)  of the vehicle to delete , -1 to move to other :"))
+						else:
+							input_b = int(raw_input(
+								" Enter id(on the terminal)  of type-B object to delete , -1 to move to other :"))
+
 						if input_b < 0:
-							print "\n press 'a' to delete a pedestrian "
-							print " press 'b' to delete a vehicle "
-							print " press 'r' to resume with tracking "
-							break
+
+							if mode:
+								print "\n press 'a' to delete a pedestrian "
+								print " press 'b' to delete a vehicle "
+								print " press 'r' to resume with tracking "
+								break
+							else:
+								print "\n press 'a' to delete an object of type-A "
+								print " press 'b' to delete an object of type-B "
+								print " press 'r' to resume with tracking "
+								break
+
 						elif input_b < len(points_veh):
 							if mode:
 								for x in which_conflict[input_b]:
@@ -338,12 +375,14 @@ def run(source, mode=False, length=500):
 
 
 				elif k == ord('r'):
+
 					break
 
 
 
 
 		if key == ord('q'):
+			print"\nQuitting . . \n"
 			break
 
 		#Pause to add objects to track
@@ -369,7 +408,11 @@ def run(source, mode=False, length=500):
 			while True:
 
 				#Add Pedestrians to track
-				print "\nAdd Pedestrians . . \nDrag rectangles across the frame to assign objects\n"
+				if mode:
+					print "\nAdd Pedestrians . . \nDrag rectangles across the frame to assign objects\n"
+				else:
+					print "\nAdd type-A objects . . \nDrag rectangles across the frame to assign objects\n"
+
 				if mode:
 					temp_ped, temp_sex = get_points.run(frame,mode,for_pedestrian=True)
 
@@ -393,7 +436,11 @@ def run(source, mode=False, length=500):
 							points_ped.append(x)
 
 				#Add vehicles to track
-				print "\nAdd vehicles, if any\n"
+				if mode:
+					print "\nAdd vehicles, if any\nDrag rectangles across the frame to assign objects\n"
+				else:
+					print "\nAdd type-B objects if any . . \nDrag rectangles across the frame to assign objects\n"
+
 				temp_veh=get_points.run(frame,mode,for_pedestrian=False)
 
 				'''Can be made more efficient '''
@@ -431,6 +478,7 @@ def run(source, mode=False, length=500):
 				if cv2.waitKey(-1) & 0xFF == ord('r'):
 					cv2.destroyWindow("Select objects to be tracked here.")
 					cv2.destroyWindow("Objects to be tracked.")
+					print "\nResumed\n"
 					break
 				if cv2.waitKey(-1) & 0xFF == ord('q'):
 					exit()
@@ -447,8 +495,12 @@ def run(source, mode=False, length=500):
 					pt1 = (int(rect.left()), int(rect.top()))
 					pt2 = (int(rect.right()), int(rect.bottom()))
 					cv2.rectangle(frame, pt1, pt2, (255, 0, 0), 2)
-					cv2.putText(frame, "ped"+str(i) , (int((pt1[0]+pt2[0])/2),int(pt1[1]+2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
 
+					if mode:
+						cv2.putText(frame, "ped"+str(i) , (int((pt1[0]+pt2[0])/2),int(pt1[1]+2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
+					else:
+						cv2.putText(frame, "A " + str(i), (int((pt1[0] + pt2[0]) / 2), int(pt1[1] + 2)),
+									cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
 					# Add trajectory of new objects
 					if len(coord_ped)<(i+1):
 						coord_ped.append(np.empty((0,2),np.uint32))
@@ -476,7 +528,12 @@ def run(source, mode=False, length=500):
 					pt1 = (int(rect.left()), int(rect.top()))
 					pt2 = (int(rect.right()), int(rect.bottom()))
 					cv2.rectangle(frame, pt1, pt2, (0, 0, 255), 2)
-					cv2.putText(frame, "veh"+str(i), (int((pt1[0] + pt2[0]) / 2), int(pt1[1] - 2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 0, 255), 1)
+					if mode:
+						cv2.putText(frame, "veh"+str(i), (int((pt1[0] + pt2[0]) / 2), int(pt1[1] - 2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 0, 255), 1)
+					else:
+						cv2.putText(frame, "B " + str(i), (int((pt1[0] + pt2[0]) / 2), int(pt1[1] - 2)),
+									cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+
 
 					# Add trajectory of new objects
 					if len(coord_veh) < (i + 1):
@@ -620,15 +677,22 @@ if __name__ == "__main__":
 	parser.add_argument('-v', "--videoFile", help="Path to Video File", type=str)
 	parser.add_argument('-l', "--videoLen", help="Length of the video in seconds",type=float)
 	parser.add_argument('-m', "--WriteMode", help="If yes, writes output to a excel file" ,type=bool)
+	parser.add_argument('-d', "--distance", help="distance between two reference lines in real world",type = float)
+
 	args = vars(parser.parse_args())
+
+	distance = 100
 
 	if args["videoFile"]:
 		source =(args["videoFile"])
 
+	if args["distance"]:
+		distance = (args["distance"])
+
 	if args["videoLen"]:
 		length = args["videoLen"]
 
-		run(source, True, length)
+		run(source, True, length, distance)
 
 	else:
 		run(source)

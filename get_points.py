@@ -1,8 +1,5 @@
 # Import the required modules
 import cv2
-import numpy as np
-
-
 
 def run(im, mode, for_pedestrian = False,):
     im_disp = im.copy()
@@ -15,34 +12,29 @@ def run(im, mode, for_pedestrian = False,):
     if mode and for_pedestrian:
         ped_sex = []
 
-
-
     # List containing top-left and bottom-right to crop the image.
     pts_1 = []
     pts_2 = []
 
     rects = []
     run.mouse_down = False
+
+    #For removing the bug that kept on adding pedestrains when
+    #Pedestrian sex was not supplied
     run.adding_sex = True
-
-
 
     def callback(event, x, y, flags, param):
 
-
         if event == cv2.EVENT_LBUTTONDOWN and run.adding_sex == True:
-
-
             pts_1.append((x, y))
             run.mouse_down = True
 
-
         elif event == cv2.EVENT_LBUTTONUP and run.mouse_down == True:
-
             run.mouse_down = False
             pts_2.append((x, y))
-            print "object selected\n"
+
             if mode and for_pedestrian:
+                print "object selected\n"
                 print "press 'm' or 'f' on the window to assign sex: "
                 run.adding_sex = False
                 if cv2.waitKey(-1) & 0xFF == ord('m'):
@@ -54,9 +46,10 @@ def run(im, mode, for_pedestrian = False,):
                     ped_sex.append('f')
                     run.adding_sex = True
                 #print ped_sex
+            print "Object added succesfully\n"
 
-
-            print "\nTo delete the previously selected object,press key `d` to mark a new location.\n"
+            print "\nYou can add more objects. \nPress 'd' to delete the last selected objects." \
+                  "\nPress 's' to save and continue with the present selection \n"
 
         elif event == cv2.EVENT_MOUSEMOVE and run.mouse_down == True:
             im_draw = im.copy()
@@ -69,7 +62,7 @@ def run(im, mode, for_pedestrian = False,):
 
     print "Press key `s` any time to save and \n           continue with the selected points."
     print "Press key `d` to discard the last object selected."
-    print "Press key `q` to quit the program.\n"
+    print "Press key `r` to resume the tracking.\n"
 
     while True:
         # Draw the rectangular boxes on the image
@@ -85,8 +78,6 @@ def run(im, mode, for_pedestrian = False,):
         key = cv2.waitKey(10) & 0xFF
         if key == ord('s'):
             print "Saved."
-            # Press key `s` to return the selected points
-
             point= [(tl + br) for tl, br in zip(pts_1, pts_2)]
             corrected_point=check_point(point)
 
@@ -96,12 +87,7 @@ def run(im, mode, for_pedestrian = False,):
             else:
                 return corrected_point
 
-        elif key== ord('q'):
-            # Press key `q` to quit the program
-            #print "Quitting without saving."
-            #exit()
-
-
+        elif key== ord('r'):
             if for_pedestrian and mode:
                 return "QUIT", "QUIT"
             else:
@@ -111,7 +97,6 @@ def run(im, mode, for_pedestrian = False,):
         elif key == ord('d'):
             # Press ket `d` to delete the last rectangular region
             if run.mouse_down == False and pts_1:
-
                 pts_1.pop()
                 pts_2.pop()
                 if for_pedestrian and mode:

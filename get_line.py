@@ -19,9 +19,6 @@ def run(im):
     list = [l1,l2]
 
     mouse_down = False
-
-
-
     def callback(event, x, y, flags, param):
         global trigger, mouse_down
 
@@ -35,16 +32,10 @@ def run(im):
                 list[trigger][1] = (x,y)
                 cv2.line(im_disp, (list[trigger][0][0], list[trigger][0][1]),
                          (list[trigger][1][0], list[trigger][1][1]), (255, 0, 0), 2)
-
                 trigger += 1
         else:
             pass
-
-
-
-
     cv2.setMouseCallback(window_name, callback)
-
     while True:
         cv2.imshow(window_name,im_disp)
         key = cv2.waitKey(10) & 0xFF
@@ -53,4 +44,3 @@ def run(im):
             # Press key `q` to quit the program
             return list
             exit()
-
