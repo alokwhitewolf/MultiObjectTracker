@@ -499,7 +499,7 @@ def run(source, mode=False, length=500, dist=100):
 					if mode:
 						cv2.putText(frame, "ped"+str(i) , (int((pt1[0]+pt2[0])/2),int(pt1[1]+2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
 					else:
-						cv2.putText(frame, "A " + str(i), (int((pt1[0] + pt2[0]) / 2), int(pt1[1] + 2)),
+						cv2.putText(frame, "A" + str(i), (int((pt1[0] + pt2[0]) / 2), int(pt1[1] + 2)),
 									cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
 					# Add trajectory of new objects
 					if len(coord_ped)<(i+1):
@@ -531,7 +531,7 @@ def run(source, mode=False, length=500, dist=100):
 					if mode:
 						cv2.putText(frame, "veh"+str(i), (int((pt1[0] + pt2[0]) / 2), int(pt1[1] - 2)), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 0, 255), 1)
 					else:
-						cv2.putText(frame, "B " + str(i), (int((pt1[0] + pt2[0]) / 2), int(pt1[1] - 2)),
+						cv2.putText(frame, "B" + str(i), (int((pt1[0] + pt2[0]) / 2), int(pt1[1] - 2)),
 									cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
 
