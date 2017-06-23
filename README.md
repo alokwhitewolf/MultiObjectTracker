@@ -5,7 +5,7 @@ Advanced multiple object tracker using <b>dlib</b> and <b>openCV</b> library.
 
 This is my summer(2017) project under the guidance of Prof P Vedagiri (IIT B , Civil department) at the end of my 2nd semester. This pertains to automating the detection of pedestrian-vehicle conflicts by using image processing. The objective was to find out <a href="https://www.researchgate.net/figure/7232990_fig1_Fig-1-Illustration-of-post-encroachment-time-PET"> Post Encroachment Time (PET)</a> values semi-autonomously.
 
-This program has two modes. The <b>normal mode</b> can track multiple instances of user specified objects of 2 categories as they move across the frames. The second mode consists a suite of data analysis of the object trajectories obtained for the transportation department purposes. 
+This program has two modes. The <b>normal mode</b> can track multiple instances of user specified objects of 2 categories as they move across the frames. The <b>analysis</b> mode consists a suite of data analysis of the object trajectories obtained for the transportation department purposes. 
 
 
 ## Dependencies
@@ -18,7 +18,7 @@ This program has two modes. The <b>normal mode</b> can track multiple instances 
 
 ### Normal mode
 
-To run the code using a video file use the following command line argument --
+To run the code using a video file use the following command line arguement --
 
 ```shell
 python main.py -v <path-2-video-file>
@@ -31,24 +31,24 @@ python main.py -v docs/video/traffic2
 ```
 
 
-Once the code starts, it will play video file. To select the objects to be tracked, pause the video by pressing the <kbd>p</kbd> key. It will first ask you to  to create a bounding box around the object(s) to be tracked in the newsly created window. Press the mouse to select the top-left pixel location of the object to be tracked and then release the mouse on the bottom-right location of the object to be tracked. You can select multiple instaces of a type of object
+Once the code starts, it will play video file. To select the objects to be tracked, pause the video by pressing the <kbd>p</kbd> key. It will first ask you to  to create a bounding box around the object(s) to be tracked in a newly created window. Press the mouse to select the top-left pixel location of the object to be tracked and then release the mouse on the bottom-right location of the object to be tracked. You can select multiple instaces of a type of object
 
 ![Image](docs/images/normal_create_rectangles.png)
 
 Also, if you want to discard the last selected object, press the <kbd>d</kbd> key. Press <kbd>s</kbd> key to save the category of objects and initiate the tracker.Each object is assigned an index, which will be useful in deleting instances of the trackers. press <kbd>r</kbd> key anytime to resume tracking without saving the currently selected objects.
 
-This process is done twice to track objects of 2 categories. You may fill objects of one category only if you choose so. You can always pause and add ibjects later
+This process is done twice to track objects of 2 categories. You may fill objects of one category only if you choose so. You can always pause and add objects later
 
 Whenever the video is playing, you can press <kbd>d</kbd> key to delete instances of the object you do not want. Further instruction will appear on the terminal window
 
-You can always pause and resume the tracking. It doesn't lead to any loss of tracker objects.
+You can always pause and resume the tracking. It won't lead to any loss of tracker objects.
 
 Press <kbd>q</kbd> anytime to gracefully quit the code
 
 ### Analysis mode
 
 
-Additional flags -l is needed for calculating PET and using the analysis mode.
+Additional flag -l is needed for calculating PET and using the analysis mode.
 
 If the -l flag is not provided, main.py simply acts as multiple object tracker.
 
