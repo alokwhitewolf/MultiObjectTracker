@@ -34,7 +34,7 @@ source=0
 #Fps calculation is not needed when mode = False in run()
 
 def get_fps(source, Videolength):
-	cap = cv2.VideoCapture("docs/video/traffic2")
+	cap = cv2.VideoCapture(source)
 	frame_counter = 0
 	print "Calculating Frames per second . . . "
 
@@ -46,7 +46,7 @@ def get_fps(source, Videolength):
 			break
 
 		frame_counter += 1
-
+		
 	cap.release()
 	cv2.destroyAllWindows()
 	fps = float(frame_counter/Videolength)
@@ -126,6 +126,10 @@ def run(source, mode=False, length=500, dist=100):
 
 		#Get fps of the source video.
 		fps = get_fps(source, length)
+		#fps = 25.02
+		print "fps is - - " + str(fps)
+
+		video = cv2.VideoCapture(source)
 
 		frame_var_ped = 20 * fps
 		frame_var_veh = 10 * fps
