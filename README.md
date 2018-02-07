@@ -3,7 +3,7 @@ Advanced multiple object tracker using <b>dlib</b> and <b>openCV</b> library.
 <br><br>
 ![Image](docs/images/screenshot_tracking.png)
 
-This is my summer(2017) under Civil department(IIT Bombay) at the end of my 2nd semester. This pertains to automating the detection of pedestrian-vehicle conflicts by using image processing. The objective was to find out <a href="https://www.researchgate.net/figure/7232990_fig1_Fig-1-Illustration-of-post-encroachment-time-PET"> Post Encroachment Time (PET)</a> values semi-autonomously.
+This is my summer(2017) project under Prof P. Vedagiri of Civil department(IIT Bombay) at the end of my 2nd semester. This pertains to automating the detection of pedestrian-vehicle conflicts by using image processing. The objective was to find out <a href="https://www.researchgate.net/figure/7232990_fig1_Fig-1-Illustration-of-post-encroachment-time-PET"> Post Encroachment Time (PET)</a> values semi-autonomously.
 
 This program has two modes. The <b>normal mode</b> can track multiple instances of user specified objects of 2 categories as they move across the frames. The <b>analysis</b> mode consists a suite of data analysis of the object trajectories obtained for the transportation department purposes. 
 
